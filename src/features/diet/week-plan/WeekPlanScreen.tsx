@@ -374,18 +374,40 @@ type PlanPickerProps = {
   onCancel: () => void;
 };
 
-/** Meal plan list for one day; tapping a plan saves it at once. */
+/**
+ * Meal plan list for one day. Tapping a plan only opens it (phone: under the card, PC: panel);
+ * the day is saved with "Wybierz ten jadłospis" in the opened plan.
+ */
 function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps) {
   const variants = getMealPlanVariants();
   const [variantId, setVariantId] = useState(variantOf(current)?.id ?? variants[0]?.id ?? "");
+  const [openNumber, setOpenNumber] = useState<number | null>(current?.planNumber ?? null);
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
   const totals = useMemo(
     () => new Map((variant?.plans ?? []).map((plan) => [plan.number, planTotals(plan)])),
     [variant],
   );
 
+  const isCurrent = (plan: MealPlan) => current?.variantId === variant?.id && current?.planNumber === plan.number;
+  const openPlan = variant?.plans.find((plan) => plan.number === openNumber) ?? null;
+
+  const details = (plan: MealPlan) => (
+    <>
+      <div className="week-actions">
+        {isCurrent(plan) ? (
+          <span className="week-current">Obecnie wybrany</span>
+        ) : (
+          <button type="button" className="week-button is-primary" disabled={busy} onClick={() => onPick(variant!.id, plan)}>
+            Wybierz ten jadłospis
+          </button>
+        )}
+      </div>
+      <PlanItems key={plan.number} items={plan.items} />
+    </>
+  );
+
   return (
-    <section className="week-picker">
+    <section className="week-picker is-wide">
       <div className="week-picker-header">
         <h2 className="meals-panel-title">Wybierz jadłospis — {title}</h2>
         <button type="button" className="week-button" onClick={onCancel}>
@@ -405,7 +427,10 @@ function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps)
               id="week-plan-variant"
               className="meals-sort-select"
               value={variant.id}
-              onChange={(e) => setVariantId(e.target.value)}
+              onChange={(e) => {
+                setVariantId(e.target.value);
+                setOpenNumber(null);
+              }}
             >
               {variants.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -418,32 +443,49 @@ function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps)
             Cel: {number.format(variant.targetKcal)} kcal · wyróżnione: poza ±{TARGET_TOLERANCE * 100}%
           </p>
 
-          <ul className="meals-list week-picker-list">
-            {variant.plans.map((plan) => {
-              const isCurrent = current?.variantId === variant.id && current.planNumber === plan.number;
-              return (
-                <li key={plan.number} className={"meals-item" + (isCurrent ? " is-open" : "")}>
-                  <button
-                    type="button"
-                    className="meals-item-summary"
-                    disabled={busy}
-                    onClick={() => onPick(variant.id, plan)}
-                  >
-                    <PlanCardSummary
-                      title={
-                        <>
-                          Jadłospis {plan.number}
-                          {isCurrent && <span className="week-source">obecnie wybrany</span>}
-                        </>
-                      }
-                      totals={totals.get(plan.number)!}
-                      targetKcal={variant.targetKcal}
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="meals-layout">
+            <ul className="meals-list">
+              {variant.plans.map((plan) => {
+                const isOpen = openNumber === plan.number;
+                return (
+                  <li key={plan.number} className={"meals-item" + (isOpen ? " is-open" : "")}>
+                    <button
+                      type="button"
+                      className="meals-item-summary"
+                      aria-expanded={isOpen}
+                      onClick={() => setOpenNumber(isOpen ? null : plan.number)}
+                    >
+                      <PlanCardSummary
+                        title={
+                          <>
+                            Jadłospis {plan.number}
+                            {isCurrent(plan) && <span className="week-source">obecnie wybrany</span>}
+                          </>
+                        }
+                        totals={totals.get(plan.number)!}
+                        targetKcal={variant.targetKcal}
+                      />
+                    </button>
+
+                    {/* phone: details under the card */}
+                    {isOpen && <div className="meals-details meals-details-inline">{details(plan)}</div>}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* PC: details of the opened plan next to the list */}
+            <aside className="meals-panel">
+              {openPlan ? (
+                <div className="meals-details">
+                  <h2 className="meals-panel-title">Jadłospis {openPlan.number}</h2>
+                  {details(openPlan)}
+                </div>
+              ) : (
+                <p className="meals-panel-empty">Kliknij jadłospis, żeby zobaczyć, co zawiera.</p>
+              )}
+            </aside>
+          </div>
         </>
       )}
     </section>

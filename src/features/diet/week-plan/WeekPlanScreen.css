@@ -98,6 +98,25 @@
   max-width: 640px;
 }
 
+/* meal plan picker: list + panel like the week itself */
+.week-picker.is-wide {
+  max-width: none;
+}
+
+/* "Wybierz ten jadłospis" — the one action that saves */
+.week-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.week-current {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
 .week-picker-header {
   display: flex;
   align-items: center;
