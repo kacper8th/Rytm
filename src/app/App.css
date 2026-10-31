@@ -1,0 +1,120 @@
+/* App shell — phone first: content + bottom navigation bar */
+.app {
+  min-height: 100dvh;
+}
+
+.app-content {
+  padding: var(--space-4);
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--space-4));
+}
+
+.app-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-brand {
+  display: none;
+}
+
+.app-nav-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: var(--nav-height);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-nav-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.app-nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+.app-nav-item.is-active {
+  color: var(--color-accent);
+}
+
+.app-nav-item.is-active .app-nav-icon {
+  filter: none;
+  opacity: 1;
+}
+
+/* PC: side navigation panel */
+@media (min-width: 900px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
+
+  .app-nav {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    border-top: none;
+    border-right: 1px solid var(--color-border);
+    padding: var(--space-5) var(--space-3);
+  }
+
+  .app-brand {
+    display: block;
+    padding: 0 var(--space-3) var(--space-5);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-accent);
+    letter-spacing: 0.02em;
+  }
+
+  .app-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    height: auto;
+  }
+
+  .app-nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-md);
+  }
+
+  .app-nav-item:hover {
+    background: var(--color-surface-raised);
+  }
+
+  .app-nav-item.is-active {
+    background: var(--color-surface-raised);
+  }
+
+  .app-content {
+    width: 100%;
+    max-width: var(--content-max-width);
+    padding: var(--space-6);
+  }
+}

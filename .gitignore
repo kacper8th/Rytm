@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# local env / editor
+*.local
+.env
+.vscode/*
+!.vscode/extensions.json
+
+# logs / OS
+*.log
+.DS_Store
+Thumbs.db
