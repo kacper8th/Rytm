@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import type { RouteObject } from "react-router";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DietScreen } from "../features/diet/DietScreen";
+import { ProductsScreen } from "../features/diet/products/ProductsScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
@@ -29,7 +30,15 @@ export type AppModule = {
 
 export const MODULES: AppModule[] = [
   { id: "home", label: "Dziś", icon: "🏠", path: "/", Screen: HomeScreen, inBottomBar: true },
-  { id: "diet", label: "Dieta", icon: "🍽️", path: "/diet", Screen: DietScreen, inBottomBar: true },
+  {
+    id: "diet",
+    label: "Dieta",
+    icon: "🍽️",
+    path: "/diet",
+    Screen: DietScreen,
+    inBottomBar: true,
+    subRoutes: [{ path: "products", Component: ProductsScreen }],
+  },
   { id: "training", label: "Trening", icon: "🏋️", path: "/training", Screen: TrainingScreen, inBottomBar: true },
   { id: "tasks", label: "Zadania", icon: "📋", path: "/tasks", Screen: TasksScreen, inBottomBar: true },
 ];

@@ -131,6 +131,12 @@
   .app-content {
     width: 100%;
     max-width: var(--content-max-width);
+    min-width: 0;
     padding: var(--space-6);
+  }
+
+  /* screens with wide content (e.g. tables) use the whole window width */
+  .app-content:has(.page-wide) {
+    max-width: none;
   }
 }
