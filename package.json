@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "import:products": "node scripts/import-products.mjs",
-    "import:meals": "node scripts/import-meals.mjs"
+    "import:meals": "node scripts/import-meals.mjs",
+    "import:meal-plans": "node scripts/import-meal-plans.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",

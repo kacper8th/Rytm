@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { getMealPlanVariants } from "./meal-plans/meal-plans";
 import { getMeals } from "./meals/meals";
 import { getProducts } from "./products/products";
 import "./DietScreen.css";
@@ -24,6 +25,17 @@ export function DietScreen() {
             </span>
             <span className="diet-item-label">Dania</span>
             <span className="diet-item-count">{getMeals().length}</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/diet/meal-plans" className="diet-item">
+            <span className="diet-icon" aria-hidden="true">
+              📅
+            </span>
+            <span className="diet-item-label">Jadłospisy</span>
+            <span className="diet-item-count">
+              {getMealPlanVariants().reduce((sum, variant) => sum + variant.plans.length, 0)}
+            </span>
           </Link>
         </li>
       </ul>

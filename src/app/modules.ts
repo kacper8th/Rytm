@@ -4,6 +4,7 @@ import { HomeScreen } from "../features/home/HomeScreen";
 import { DietScreen } from "../features/diet/DietScreen";
 import { ProductsScreen } from "../features/diet/products/ProductsScreen";
 import { MealsScreen } from "../features/diet/meals/MealsScreen";
+import { MealPlansScreen } from "../features/diet/meal-plans/MealPlansScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
@@ -41,6 +42,7 @@ export const MODULES: AppModule[] = [
     subRoutes: [
       { path: "products", Component: ProductsScreen },
       { path: "meals", Component: MealsScreen },
+      { path: "meal-plans", Component: MealPlansScreen },
     ],
   },
   { id: "training", label: "Trening", icon: "🏋️", path: "/training", Screen: TrainingScreen, inBottomBar: true },
