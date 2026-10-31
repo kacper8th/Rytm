@@ -6,7 +6,7 @@ import { ProductsScreen } from "../features/diet/products/ProductsScreen";
 import { MealsScreen } from "../features/diet/meals/MealsScreen";
 import { MealPlansScreen } from "../features/diet/meal-plans/MealPlansScreen";
 import { WeekPlanScreen } from "../features/diet/week-plan/WeekPlanScreen";
-import { WeekStatisticsScreen } from "../features/diet/week-statistics/WeekStatisticsScreen";
+import { WeekStatisticsScreen } from "../features/diet/week-plan/week-statistics/WeekStatisticsScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
