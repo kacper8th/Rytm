@@ -3,6 +3,7 @@ import type { RouteObject } from "react-router";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DietScreen } from "../features/diet/DietScreen";
 import { ProductsScreen } from "../features/diet/products/ProductsScreen";
+import { MealsScreen } from "../features/diet/meals/MealsScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
@@ -37,7 +38,10 @@ export const MODULES: AppModule[] = [
     path: "/diet",
     Screen: DietScreen,
     inBottomBar: true,
-    subRoutes: [{ path: "products", Component: ProductsScreen }],
+    subRoutes: [
+      { path: "products", Component: ProductsScreen },
+      { path: "meals", Component: MealsScreen },
+    ],
   },
   { id: "training", label: "Trening", icon: "🏋️", path: "/training", Screen: TrainingScreen, inBottomBar: true },
   { id: "tasks", label: "Zadania", icon: "📋", path: "/tasks", Screen: TasksScreen, inBottomBar: true },

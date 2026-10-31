@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { getMeals } from "./meals/meals";
 import { getProducts } from "./products/products";
 import "./DietScreen.css";
 
@@ -14,6 +15,15 @@ export function DietScreen() {
             </span>
             <span className="diet-item-label">Produkty</span>
             <span className="diet-item-count">{getProducts().length}</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/diet/meals" className="diet-item">
+            <span className="diet-icon" aria-hidden="true">
+              🍲
+            </span>
+            <span className="diet-item-label">Dania</span>
+            <span className="diet-item-count">{getMeals().length}</span>
           </Link>
         </li>
       </ul>
