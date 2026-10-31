@@ -50,25 +50,44 @@ export function getMealPlanVariants(): readonly MealPlanVariant[] {
 let mealsById: Map<string, Meal> | null = null;
 let productsById: Map<string, Product> | null = null;
 
-export function planMeal(item: Extract<MealPlanItem, { kind: "meal" }>): Meal {
+/** The meal of an item, or undefined when its id is no longer in Meals (possible in saved week plans). */
+export function findPlanMeal(item: Extract<MealPlanItem, { kind: "meal" }>): Meal | undefined {
   mealsById ??= new Map(getMeals().map((m) => [m.id, m]));
-  const meal = mealsById.get(item.mealId);
+  return mealsById.get(item.mealId);
+}
+
+/** The product of an item, or undefined when its id is no longer in Products. */
+export function findPlanProduct(item: Extract<MealPlanItem, { kind: "product" }>): Product | undefined {
+  productsById ??= new Map(getProducts().map((p) => [p.id, p]));
+  return productsById.get(item.productId);
+}
+
+export function isItemKnown(item: MealPlanItem): boolean {
+  return item.kind === "meal" ? findPlanMeal(item) !== undefined : findPlanProduct(item) !== undefined;
+}
+
+export function planMeal(item: Extract<MealPlanItem, { kind: "meal" }>): Meal {
+  const meal = findPlanMeal(item);
   // The import checks every id, so this only happens when meals.data.ts changed without re-importing meal plans.
   if (!meal) throw new Error(`Meal plan refers to unknown meal "${item.mealId}" — run npm run import:meal-plans`);
   return meal;
 }
 
 export function planProduct(item: Extract<MealPlanItem, { kind: "product" }>): Product {
-  productsById ??= new Map(getProducts().map((p) => [p.id, p]));
-  const product = productsById.get(item.productId);
+  const product = findPlanProduct(item);
   if (!product) throw new Error(`Meal plan refers to unknown product "${item.productId}" — run npm run import:meal-plans`);
   return product;
 }
 
-/** Items in meal-type order; items of the same type keep the order of the file. */
-export function planItems(plan: MealPlan): MealPlanItem[] {
+/** Items in meal-type order; items of the same type keep their order. */
+export function sortItems(items: readonly MealPlanItem[]): MealPlanItem[] {
   const order = (item: MealPlanItem) => MEAL_TYPES.findIndex((t) => t.key === item.mealType);
-  return [...plan.items].sort((a, b) => order(a) - order(b));
+  return [...items].sort((a, b) => order(a) - order(b));
+}
+
+/** Items of a plan in meal-type order; items of the same type keep the order of the file. */
+export function planItems(plan: MealPlan): MealPlanItem[] {
+  return sortItems(plan.items);
 }
 
 export function mealTypeLabel(type: MealType): string {
@@ -88,6 +107,11 @@ export function itemTotals(item: MealPlanItem): Record<NutrientKey, number> {
 /** Totals of the whole day. */
 export function planTotals(plan: MealPlan): Record<NutrientKey, number> {
   return mealTotals(plan.items.flatMap(itemIngredients));
+}
+
+/** Totals of a list of items; items whose meal / product no longer exists are left out. */
+export function itemsTotals(items: readonly MealPlanItem[]): Record<NutrientKey, number> {
+  return mealTotals(items.filter(isItemKnown).flatMap(itemIngredients));
 }
 
 /** true when the day's kcal is further than ±TARGET_TOLERANCE from the target. */

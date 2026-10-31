@@ -1,25 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "../meals/MealDetails";
-import {
-  getMealPlanVariants,
-  isOffTarget,
-  itemTotals,
-  mealTypeLabel,
-  planItems,
-  planMeal,
-  planProduct,
-  planTotals,
-  TARGET_TOLERANCE,
-  type MealPlan,
-  type MealPlanItem,
-} from "./meal-plans";
+import { number } from "../meals/MealDetails";
+import { getMealPlanVariants, planTotals, TARGET_TOLERANCE } from "./meal-plans";
+import { PlanCardSummary, PlanItems } from "./PlanItems";
 import "./MealPlansScreen.css";
-
-const signed = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0, signDisplay: "exceptZero" });
-
-/** Macros on a plan card — the meal card's macros plus fibre. */
-const MACROS_ON_PLAN = [...MACROS_ON_CARD, "fiber"] as const;
 
 export function MealPlansScreen() {
   const variants = getMealPlanVariants();
@@ -75,8 +59,6 @@ export function MealPlansScreen() {
         <ul className="meals-list">
           {variant.plans.map((plan) => {
             const isOpen = openNumber === plan.number;
-            const day = totals.get(plan.number)!;
-            const off = isOffTarget(day.kcal, variant.targetKcal);
             return (
               <li key={plan.number} className={"meals-item" + (isOpen ? " is-open" : "")}>
                 <button
@@ -85,27 +67,17 @@ export function MealPlansScreen() {
                   aria-expanded={isOpen}
                   onClick={() => setOpenNumber(isOpen ? null : plan.number)}
                 >
-                  <span className="meals-item-name">Jadłospis {plan.number}</span>
-                  <span className="meals-item-kcal">
-                    {number.format(day.kcal)}
-                    <span className="meals-unit"> kcal</span>
-                  </span>
-                  <span className="meals-item-macros">
-                    {MACROS_ON_PLAN.map((key) => (
-                      <span key={key}>
-                        {nutrientShort(key)} {number.format(day[key])} g
-                      </span>
-                    ))}
-                    <span className={"plans-diff" + (off ? " is-off" : "")}>
-                      {signed.format(day.kcal - variant.targetKcal)} kcal
-                    </span>
-                  </span>
+                  <PlanCardSummary
+                    title={`Jadłospis ${plan.number}`}
+                    totals={totals.get(plan.number)!}
+                    targetKcal={variant.targetKcal}
+                  />
                 </button>
 
                 {/* phone: details under the card */}
                 {isOpen && (
                   <div className="meals-details meals-details-inline">
-                    <PlanDetails plan={plan} />
+                    <PlanItems items={plan.items} />
                   </div>
                 )}
               </li>
@@ -118,7 +90,7 @@ export function MealPlansScreen() {
           {openPlan ? (
             <div className="meals-details">
               <h2 className="meals-panel-title">Jadłospis {openPlan.number}</h2>
-              <PlanDetails key={openPlan.number} plan={openPlan} />
+              <PlanItems key={openPlan.number} items={openPlan.items} />
             </div>
           ) : (
             <p className="meals-panel-empty">Wybierz jadłospis z listy.</p>
@@ -138,68 +110,5 @@ function PlansHeader({ count }: { count: number }) {
       <h1 className="meals-title">Jadłospisy</h1>
       <p className="meals-count">{count} jadłospisów</p>
     </header>
-  );
-}
-
-/** Items of the day in meal-type order; a meal expands on click and collapses on the next click. */
-function PlanDetails({ plan }: { plan: MealPlan }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const items = planItems(plan);
-
-  return (
-    <ul className="plans-items">
-      {items.map((item, index) => {
-        const isOpen = openIndex === index;
-        const content = <ItemSummary item={item} />;
-        return (
-          <li key={index} className={"plans-item" + (isOpen ? " is-open" : "")}>
-            {item.kind === "meal" ? (
-              <>
-                <button
-                  type="button"
-                  className="plans-item-summary is-clickable"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                >
-                  {content}
-                </button>
-                {isOpen && (
-                  <div className="meals-details plans-item-details">
-                    <MealDetails meal={planMeal(item)} steps={item.steps} macrosOnly />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="plans-item-summary">{content}</div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function ItemSummary({ item }: { item: MealPlanItem }) {
-  const totals = itemTotals(item);
-  const name = item.kind === "meal" ? planMeal(item).name : planProduct(item).name;
-  return (
-    <>
-      <span className="plans-item-type">{mealTypeLabel(item.mealType)}</span>
-      <span className="plans-item-name">
-        {name}
-        {item.kind === "product" && <span className="meals-unit"> · {number.format(item.grams)} g</span>}
-      </span>
-      <span className="meals-item-kcal">
-        {number.format(totals.kcal)}
-        <span className="meals-unit"> kcal</span>
-      </span>
-      <span className="meals-item-macros">
-        {MACROS_ON_CARD.map((key) => (
-          <span key={key}>
-            {nutrientShort(key)} {number.format(totals[key])} g
-          </span>
-        ))}
-      </span>
-    </>
   );
 }

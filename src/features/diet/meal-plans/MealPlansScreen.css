@@ -67,6 +67,12 @@
   font-weight: 600;
 }
 
+/* meal / product id no longer in the data (saved week plans) */
+.plans-item-missing {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
 .plans-item-details {
   padding: 0 var(--space-3) var(--space-3);
 }

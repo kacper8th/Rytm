@@ -1,0 +1,116 @@
+/* Week plan reuses the Meals / Meal plans layout (meals-*, plans-* classes); only week-specific parts are here. */
+
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.week-nav-label {
+  min-width: 11em;
+  font-weight: 700;
+  text-align: center;
+}
+
+.week-button {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.week-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.week-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.week-arrow {
+  min-width: 44px;
+}
+
+/* saving / error messages */
+.week-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.week-status.is-error {
+  color: var(--color-accent);
+}
+
+/* day cards */
+.week-day.is-today:not(.is-open) {
+  border-color: var(--color-text-muted);
+}
+
+.week-today {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.week-source {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.week-empty-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.week-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.week-plan .meals-item-summary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* meal plan picker */
+.week-picker {
+  max-width: 640px;
+}
+
+.week-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.week-picker-header .meals-panel-title {
+  margin: 0;
+}
+
+/* Details are nested in a grid — keep wide tables from stretching the panel (they scroll instead). */
+.week-plan .meals-details {
+  grid-template-columns: minmax(0, 1fr);
+}
