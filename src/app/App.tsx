@@ -1,21 +1,27 @@
-import { HomeScreen } from "../features/home/HomeScreen";
+import { NavLink, Outlet, ScrollRestoration } from "react-router";
+import { MODULES, MORE_ITEM } from "./modules";
 import "./App.css";
 
-type NavItem = {
+type NavEntry = {
   id: string;
   label: string;
   icon: string;
+  path: string;
+  /** Extra CSS class controlling where the entry is visible. */
+  visibility?: "phone-hidden" | "pc-hidden";
 };
 
-// Static sketch: navigation is not wired yet — clicking does nothing.
-const NAV_ITEMS: NavItem[] = [
-  { id: "home", label: "Dziś", icon: "🏠" },
-  { id: "diet", label: "Dieta", icon: "🍽️" },
-  { id: "training", label: "Trening", icon: "🏋️" },
-  { id: "tasks", label: "Zadania", icon: "📋" },
+// Phone: modules from the bottom bar + "Więcej". PC: all modules, no "Więcej".
+const NAV_ENTRIES: NavEntry[] = [
+  ...MODULES.map((m) => ({
+    id: m.id,
+    label: m.label,
+    icon: m.icon,
+    path: m.path,
+    visibility: m.inBottomBar ? undefined : ("phone-hidden" as const),
+  })),
+  { ...MORE_ITEM, visibility: "pc-hidden" },
 ];
-
-const ACTIVE_ID = "home";
 
 export function App() {
   return (
@@ -23,26 +29,28 @@ export function App() {
       <nav className="app-nav" aria-label="Główna nawigacja">
         <div className="app-brand">Rytm</div>
         <ul className="app-nav-list">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className={"app-nav-item" + (item.id === ACTIVE_ID ? " is-active" : "")}
-                aria-current={item.id === ACTIVE_ID ? "page" : undefined}
+          {NAV_ENTRIES.map((entry) => (
+            <li key={entry.id} className={entry.visibility ? `is-${entry.visibility}` : undefined}>
+              <NavLink
+                to={entry.path}
+                end={entry.path === "/"}
+                className={({ isActive }) => "app-nav-item" + (isActive ? " is-active" : "")}
               >
                 <span className="app-nav-icon" aria-hidden="true">
-                  {item.icon}
+                  {entry.icon}
                 </span>
-                <span className="app-nav-label">{item.label}</span>
-              </button>
+                <span className="app-nav-label">{entry.label}</span>
+              </NavLink>
             </li>
           ))}
         </ul>
       </nav>
 
       <main className="app-content">
-        <HomeScreen />
+        <Outlet />
       </main>
+
+      <ScrollRestoration />
     </div>
   );
 }

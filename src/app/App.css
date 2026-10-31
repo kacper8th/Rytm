@@ -25,11 +25,17 @@
 
 .app-nav-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   height: var(--nav-height);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* phone: modules outside the bottom bar are listed under "Więcej" */
+.is-phone-hidden {
+  display: none;
 }
 
 .app-nav-item {
@@ -44,6 +50,7 @@
   border: none;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -93,6 +100,15 @@
     flex-direction: column;
     gap: var(--space-1);
     height: auto;
+  }
+
+  /* PC: all modules are in the side panel, "Więcej" is not needed */
+  .is-phone-hidden {
+    display: block;
+  }
+
+  .is-pc-hidden {
+    display: none;
   }
 
   .app-nav-item {
