@@ -3,7 +3,7 @@ import "./HomeScreen.css";
 
 // SAMPLE DATA — static sketch only. Real data comes with the modules.
 const SAMPLE = {
-  userName: "Bajda",
+  userName: "Kacper",
   workout: { name: "Siła A", exercises: 5, minutes: 60 },
   habits: [
     { name: "Poranna mobilność", done: true },
