@@ -24,6 +24,9 @@ export type WeekPlan = {
   days: WeekPlanDay[];
 };
 
+/** A week with saved days — for picking a week to copy from. */
+export type WeekSummary = { weekStart: string; days: number };
+
 export const DAYS_IN_WEEK = 7;
 
 const DAY_NAMES = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Ndz"];
@@ -128,4 +131,24 @@ export async function saveDay(
 
 export async function clearDay(weekStart: string, day: number): Promise<void> {
   await request(`/api/week-plans/${weekStart}/days/${day}`, { method: "DELETE" });
+}
+
+/** Weeks that have saved days, newest first. */
+export async function listWeeks(): Promise<WeekSummary[]> {
+  const response = await request("/api/week-plans");
+  return ((await response.json()) as { weeks: WeekSummary[] }).weeks;
+}
+
+export async function clearWeek(weekStart: string): Promise<void> {
+  await request(`/api/week-plans/${weekStart}`, { method: "DELETE" });
+}
+
+/** Replaces the whole week with a copy of the `from` week and returns it as saved. */
+export async function copyWeek(weekStart: string, from: string): Promise<WeekPlan> {
+  const response = await request(`/api/week-plans/${weekStart}/copy`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ from }),
+  });
+  return (await response.json()) as WeekPlan;
 }

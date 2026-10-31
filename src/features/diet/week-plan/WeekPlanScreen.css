@@ -114,3 +114,8 @@
 .week-plan .meals-details {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* copy / clear the whole week, under the week navigation */
+.week-week-actions {
+  margin-bottom: var(--space-3);
+}

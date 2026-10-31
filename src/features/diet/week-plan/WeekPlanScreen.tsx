@@ -5,10 +5,13 @@ import { getMealPlanVariants, itemsTotals, planTotals, TARGET_TOLERANCE, type Me
 import { PlanCardSummary, PlanItems } from "../meal-plans/PlanItems";
 import {
   clearDay,
+  clearWeek,
+  copyWeek,
   currentWeekStart,
   dayLabel,
   DAYS_IN_WEEK,
   getWeekPlan,
+  listWeeks,
   saveDay,
   shiftWeek,
   todayIn,
@@ -16,6 +19,7 @@ import {
   type WeekPlan,
   type WeekPlanDay,
   type WeekPlanSource,
+  type WeekSummary,
 } from "./week-plan";
 import "./WeekPlanScreen.css";
 
@@ -39,6 +43,7 @@ export function WeekPlanScreen() {
   const [reloadCount, setReloadCount] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(null);
   const [pickingDay, setPickingDay] = useState<number | null>(null);
+  const [copying, setCopying] = useState(false);
   const [action, setAction] = useState<Action>({ status: "idle" });
 
   useEffect(() => {
@@ -59,6 +64,7 @@ export function WeekPlanScreen() {
     setWeekStart(week);
     setOpenDay(null);
     setPickingDay(null);
+    setCopying(false);
     setAction({ status: "idle" });
   }
 
@@ -105,6 +111,35 @@ export function WeekPlanScreen() {
     run(async () => {
       await clearDay(weekStart, day);
       replaceDay(day, null);
+      setOpenDay(null);
+    });
+  }
+
+  function startCopying() {
+    setCopying(true);
+    setAction({ status: "idle" });
+    window.scrollTo({ top: 0 });
+  }
+
+  /** The shown week becomes an exact copy of `from`; asks first when the week already has days. */
+  function copyFrom(from: string, plannedDays: number) {
+    const question =
+      `Ten tydzień (${weekLabel(weekStart)}) ma już zaplanowane dni: ${plannedDays}. ` +
+      `Zastąpić je planem z tygodnia ${weekLabel(from)}?`;
+    if (plannedDays > 0 && !window.confirm(question)) return;
+    run(async () => {
+      const plan = await copyWeek(weekStart, from);
+      setLoad({ status: "ready", plan });
+      setCopying(false);
+      setOpenDay(null);
+    });
+  }
+
+  function clearAll(plannedDays: number) {
+    if (!window.confirm(`Wyczyścić cały tydzień ${weekLabel(weekStart)}? Zaplanowane dni: ${plannedDays}.`)) return;
+    run(async () => {
+      await clearWeek(weekStart);
+      setLoad((prev) => (prev.status === "ready" ? { status: "ready", plan: { ...prev.plan, days: [] } } : prev));
       setOpenDay(null);
     });
   }
@@ -170,7 +205,17 @@ export function WeekPlanScreen() {
       )}
 
       {load.status === "ready" &&
-        (pickingDay !== null ? (
+        (copying ? (
+          <WeekCopyPicker
+            weekStart={weekStart}
+            busy={busy}
+            onPick={(from) => copyFrom(from, load.plan.days.length)}
+            onCancel={() => {
+              setCopying(false);
+              setAction({ status: "idle" });
+            }}
+          />
+        ) : pickingDay !== null ? (
           <PlanPicker
             title={dayLabel(weekStart, pickingDay)}
             current={load.plan.days.find((d) => d.day === pickingDay)?.source ?? null}
@@ -190,6 +235,8 @@ export function WeekPlanScreen() {
             onToggle={(day) => setOpenDay(openDay === day ? null : day)}
             onPick={startPicking}
             onClear={clear}
+            onCopyWeek={startCopying}
+            onClearWeek={() => clearAll(load.plan.days.length)}
           />
         ))}
     </div>
@@ -204,10 +251,12 @@ type WeekDaysProps = {
   onToggle: (day: number) => void;
   onPick: (day: number) => void;
   onClear: (day: number) => void;
+  onCopyWeek: () => void;
+  onClearWeek: () => void;
 };
 
 /** The 7 day cards; a planned day expands (phone) or opens in the panel (PC). */
-function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear }: WeekDaysProps) {
+function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear, onCopyWeek, onClearWeek }: WeekDaysProps) {
   const byDay = new Map(plan.days.map((d) => [d.day, d]));
   const today = todayIn(weekStart);
   const open = openDay !== null ? byDay.get(openDay) : undefined;
@@ -228,6 +277,14 @@ function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear }:
 
   return (
     <>
+      <div className="week-actions week-week-actions">
+        <button type="button" className="week-button" disabled={busy} onClick={onCopyWeek}>
+          Skopiuj z innego tygodnia…
+        </button>
+        <button type="button" className="week-button" disabled={busy || plan.days.length === 0} onClick={onClearWeek}>
+          Wyczyść tydzień
+        </button>
+      </div>
       <p className="plans-target">
         Zaplanowane: {plan.days.length}/{DAYS_IN_WEEK} dni
       </p>
@@ -389,6 +446,79 @@ function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps)
           </ul>
         </>
       )}
+    </section>
+  );
+}
+
+type WeekCopyPickerProps = {
+  /** The week that receives the copy — left out of the list. */
+  weekStart: string;
+  busy: boolean;
+  onPick: (from: string) => void;
+  onCancel: () => void;
+};
+
+type WeeksLoad = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; weeks: WeekSummary[] };
+
+/** List of weeks with saved days; tapping one copies it into the shown week. */
+function WeekCopyPicker({ weekStart, busy, onPick, onCancel }: WeekCopyPickerProps) {
+  const [weeks, setWeeks] = useState<WeeksLoad>({ status: "loading" });
+  const [reloadCount, setReloadCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWeeks({ status: "loading" });
+    listWeeks().then(
+      (list) => !cancelled && setWeeks({ status: "ready", weeks: list.filter((w) => w.weekStart !== weekStart) }),
+      (error: Error) => !cancelled && setWeeks({ status: "error", message: error.message }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [weekStart, reloadCount]);
+
+  return (
+    <section className="week-picker">
+      <div className="week-picker-header">
+        <h2 className="meals-panel-title">Skopiuj do {weekLabel(weekStart)} z tygodnia:</h2>
+        <button type="button" className="week-button" onClick={onCancel}>
+          Anuluj
+        </button>
+      </div>
+
+      {weeks.status === "loading" && <p className="meals-empty">Ładowanie…</p>}
+
+      {weeks.status === "error" && (
+        <div className="week-status is-error" role="alert">
+          <span>Nie udało się wczytać tygodni. {weeks.message}</span>
+          <button type="button" className="week-button" onClick={() => setReloadCount((n) => n + 1)}>
+            Spróbuj ponownie
+          </button>
+        </div>
+      )}
+
+      {weeks.status === "ready" &&
+        (weeks.weeks.length === 0 ? (
+          <p className="meals-empty">Brak innych zaplanowanych tygodni.</p>
+        ) : (
+          <ul className="meals-list week-picker-list">
+            {weeks.weeks.map((week) => (
+              <li key={week.weekStart} className="meals-item">
+                <button
+                  type="button"
+                  className="meals-item-summary"
+                  disabled={busy}
+                  onClick={() => onPick(week.weekStart)}
+                >
+                  <span className="meals-item-name">{weekLabel(week.weekStart)}</span>
+                  <span className="meals-item-macros">
+                    Zaplanowane: {week.days}/{DAYS_IN_WEEK} dni
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
     </section>
   );
 }
