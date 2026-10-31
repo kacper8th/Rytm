@@ -16,17 +16,20 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const INPUT = join(ROOT, "src/features/diet/products/products.csv");
 const OUTPUT = join(ROOT, "src/features/diet/products/products.data.ts");
 
-/** CSV columns in the expected order. Nutrient columns map to keys of `Product.nutrients`. */
+/**
+ * CSV columns in the expected order. Nutrient columns map to keys of `Product.nutrients`.
+ * Required nutrients must have a value; an empty optional one means "no data" (null).
+ */
 const COLUMNS = [
   { header: "ID", key: "csvId" },
   { header: "kategoria", key: "category" },
   { header: "firma", key: "brand" },
   { header: "nazwa produktu", key: "name" },
-  { header: "węglowodany, g", nutrient: "carbs" },
-  { header: "białko, g", nutrient: "protein" },
-  { header: "tłuszcz, g", nutrient: "fat" },
-  { header: "błonnik, g", nutrient: "fiber" },
-  { header: "kcal", nutrient: "kcal" },
+  { header: "węglowodany, g", nutrient: "carbs", required: true },
+  { header: "białko, g", nutrient: "protein", required: true },
+  { header: "tłuszcz, g", nutrient: "fat", required: true },
+  { header: "błonnik, g", nutrient: "fiber", required: true },
+  { header: "kcal", nutrient: "kcal", required: true },
   { header: "witamina A, µg", nutrient: "vitaminA" },
   { header: "witamina D, µg", nutrient: "vitaminD" },
   { header: "witamina E, mg", nutrient: "vitaminE" },
@@ -170,6 +173,11 @@ rows.forEach((cells, index) => {
   const nutrients = {};
   COLUMNS.forEach((col, i) => {
     if (!col.nutrient) return;
+    if (cells[i].trim() === "") {
+      if (col.required) errors.push(`${label}: "${col.header}" is required`);
+      nutrients[col.nutrient] = col.required ? 0 : null;
+      return;
+    }
     const value = parseNumber(cells[i]);
     if (value === null) errors.push(`${label}: "${col.header}" is not a valid number: "${cells[i]}"`);
     nutrients[col.nutrient] = value ?? 0;

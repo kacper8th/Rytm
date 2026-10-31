@@ -34,14 +34,21 @@ function matchesQuery(product: Product, query: string): boolean {
   return words.every((word) => text.includes(word));
 }
 
+/** Products without data for the sorted nutrient always go last, in both directions. */
 function sortProducts(products: readonly Product[], sort: Sort): Product[] {
   const direction = sort.descending ? -1 : 1;
   return [...products].sort((a, b) => {
-    const diff =
-      sort.key === "name"
-        ? collator.compare(a.name, b.name)
-        : a.nutrients[sort.key] - b.nutrients[sort.key];
-    return diff * direction || collator.compare(a.name, b.name);
+    if (sort.key !== "name") {
+      const aValue = a.nutrients[sort.key];
+      const bValue = b.nutrients[sort.key];
+      if (aValue === null || bValue === null) {
+        if (aValue !== bValue) return aValue === null ? 1 : -1;
+      } else if (aValue !== bValue) {
+        return (aValue - bValue) * direction;
+      }
+      return collator.compare(a.name, b.name);
+    }
+    return collator.compare(a.name, b.name) * direction;
   });
 }
 
@@ -165,13 +172,13 @@ export function ProductsScreen() {
                     const nutrient = NUTRIENTS.find((n) => n.key === key)!;
                     return (
                       <span key={key} className={sort.key === key ? "is-sorted" : undefined}>
-                        {nutrient.short} {number.format(product.nutrients[key])} g
+                        {nutrient.short} <Amount value={product.nutrients[key]} unit="g" />
                       </span>
                     );
                   })}
                   {extraKey && (
                     <span className="is-sorted">
-                      {nutrientLabel(extraKey)}: {number.format(product.nutrients[extraKey])}
+                      {nutrientLabel(extraKey)}: <Amount value={product.nutrients[extraKey]} />
                     </span>
                   )}
                 </span>
@@ -187,7 +194,7 @@ export function ProductsScreen() {
                           <div key={n.key} className={sort.key === n.key ? "is-sorted" : undefined}>
                             <dt>{n.label}</dt>
                             <dd>
-                              {number.format(product.nutrients[n.key])} {n.unit}
+                              <Amount value={product.nutrients[n.key]} unit={n.unit} />
                             </dd>
                           </div>
                         ))}
@@ -238,7 +245,7 @@ export function ProductsScreen() {
                 </th>
                 {NUTRIENTS.map((n) => (
                   <td key={n.key} className={"products-table-num" + (sort.key === n.key ? " is-sorted" : "")}>
-                    {number.format(product.nutrients[n.key])}
+                    <Amount value={product.nutrients[n.key]} />
                   </td>
                 ))}
               </tr>
@@ -267,6 +274,23 @@ export function ProductsScreen() {
         </section>
       )}
     </div>
+  );
+}
+
+/** A nutrient value, or "b.d." (brak danych) when the product has no data for it. */
+function Amount({ value, unit }: { value: number | null; unit?: string }) {
+  if (value === null) {
+    return (
+      <span className="products-missing" title="brak danych">
+        b.d.
+      </span>
+    );
+  }
+  return (
+    <>
+      {number.format(value)}
+      {unit && ` ${unit}`}
+    </>
   );
 }
 
