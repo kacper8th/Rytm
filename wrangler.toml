@@ -1,0 +1,11 @@
+# Cloudflare Pages project settings — this file is the source of truth for bindings (not the dashboard).
+# See documentation: Decisions/Decision 004 - User data.
+name = "rytm-app"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rytm-db"
+database_id = "704d6c68-3d4d-4373-bce2-2fa7f0e2b495"
+migrations_dir = "migrations"
