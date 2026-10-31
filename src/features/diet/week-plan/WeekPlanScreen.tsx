@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { number } from "../meals/MealDetails";
 import { getMealPlanVariants, itemsTotals, planTotals, TARGET_TOLERANCE, type MealPlan } from "../meal-plans/meal-plans";
 import { PlanCardSummary, PlanItems } from "../meal-plans/PlanItems";
@@ -15,6 +15,7 @@ import {
   saveDay,
   shiftWeek,
   todayIn,
+  weekFromParam,
   weekLabel,
   type WeekPlan,
   type WeekPlanDay,
@@ -38,7 +39,9 @@ function sourceLabel(source: WeekPlanSource | null): string | null {
 }
 
 export function WeekPlanScreen() {
-  const [weekStart, setWeekStart] = useState(currentWeekStart);
+  // The shown week lives in the URL (?week=), so returning from Week statistics opens the same week.
+  const [params, setParams] = useSearchParams();
+  const weekStart = weekFromParam(params.get("week"));
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [reloadCount, setReloadCount] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(null);
@@ -61,7 +64,7 @@ export function WeekPlanScreen() {
   const busy = action.status === "saving";
 
   function goToWeek(week: string) {
-    setWeekStart(week);
+    setParams({ week }, { replace: true });
     setOpenDay(null);
     setPickingDay(null);
     setCopying(false);
@@ -285,9 +288,20 @@ function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear, o
           Wyczyść tydzień
         </button>
       </div>
-      <p className="plans-target">
-        Zaplanowane: {plan.days.length}/{DAYS_IN_WEEK} dni
-      </p>
+      <div className="week-planned">
+        <p className="plans-target">
+          Zaplanowane: {plan.days.length}/{DAYS_IN_WEEK} dni
+        </p>
+        {plan.days.length > 0 ? (
+          <Link to={`/diet/week-plan/statistics?week=${weekStart}`} className="week-button">
+            Pokaż statystyki
+          </Link>
+        ) : (
+          <button type="button" className="week-button" disabled>
+            Pokaż statystyki
+          </button>
+        )}
+      </div>
 
       <div className="meals-layout">
         <ul className="meals-list">

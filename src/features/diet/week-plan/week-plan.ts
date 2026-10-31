@@ -62,6 +62,13 @@ export function currentWeekStart(): string {
   return weekStartOf(new Date());
 }
 
+/** The week from a `?week=YYYY-MM-DD` URL parameter (any day → its Monday); the current week when missing or invalid. */
+export function weekFromParam(value: string | null): string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return currentWeekStart();
+  const date = fromIsoDate(value);
+  return Number.isNaN(date.getTime()) ? currentWeekStart() : weekStartOf(date);
+}
+
 export function shiftWeek(weekStart: string, weeks: number): string {
   return toIsoDate(dayDate(weekStart, weeks * DAYS_IN_WEEK));
 }

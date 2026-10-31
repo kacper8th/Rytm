@@ -134,6 +134,24 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* "Zaplanowane: 5/7 dni" + "Pokaż statystyki" */
+.week-planned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.week-planned .plans-target {
+  margin: 0;
+}
+
+a.week-button {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* copy / clear the whole week, under the week navigation */
 .week-week-actions {
   margin-bottom: var(--space-3);
