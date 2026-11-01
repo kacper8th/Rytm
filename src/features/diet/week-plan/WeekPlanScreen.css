@@ -129,11 +129,6 @@
   margin: 0;
 }
 
-/* Details are nested in a grid — keep wide tables from stretching the panel (they scroll instead). */
-.week-plan .meals-details {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 /* "Zaplanowane: 5/7 dni" + "Pokaż statystyki" */
 .week-planned {
   display: flex;

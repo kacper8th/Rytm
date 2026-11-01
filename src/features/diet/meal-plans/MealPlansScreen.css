@@ -76,8 +76,3 @@
 .plans-item-details {
   padding: 0 var(--space-3) var(--space-3);
 }
-
-/* Details are nested in a grid — keep wide tables from stretching the panel (they scroll instead). */
-.meal-plans .meals-details {
-  grid-template-columns: minmax(0, 1fr);
-}

@@ -151,9 +151,10 @@
   color: var(--color-text-muted);
 }
 
-/* details */
+/* details — minmax(0, 1fr) keeps wide tables from stretching the card (they scroll instead) */
 .meals-details {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
