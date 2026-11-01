@@ -9,6 +9,7 @@ import {
   type NutrientKey,
   type Product,
 } from "./products";
+import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
 import "./ProductsScreen.css";
 
 type SortKey = "name" | NutrientKey;
@@ -170,7 +171,7 @@ export function ProductsScreen() {
               </button>
 
               {isOpen && (
-                <div className="products-details">
+                <div className="products-details" onClick={collapseOnClick(() => setOpenId(null))}>
                   {NUTRIENT_GROUPS.map(({ group, label }) => (
                     <section key={group} className="products-details-group">
                       <h2 className="products-details-title">{label}</h2>

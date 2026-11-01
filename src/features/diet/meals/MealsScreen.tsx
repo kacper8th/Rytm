@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "./MealDetails";
 import { getMeals, mealIngredients, mealTotals, type GainMacro, type GainSteps, type Meal } from "./meals";
 import { matchesWords } from "../../../shared/text";
+import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
 import "./MealsScreen.css";
 
 type SortKey = "name" | "kcal" | "protein" | "fat" | "carbs";
@@ -135,7 +136,7 @@ export function MealsScreen() {
 
                 {/* phone: details under the card */}
                 {isOpen && (
-                  <div className="meals-details meals-details-inline">
+                  <div className="meals-details meals-details-inline" onClick={collapseOnClick(() => setOpenId(null))}>
                     <MealDetails
                       meal={meal}
                       steps={steps[meal.id] ?? {}}

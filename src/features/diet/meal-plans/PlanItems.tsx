@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
 import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "../meals/MealDetails";
 import type { NutrientKey } from "../products/products";
 import {
@@ -51,7 +52,7 @@ export function PlanCardSummary({ title, totals, targetKcal }: PlanCardSummaryPr
   );
 }
 
-/** Items of the day in meal-type order; a meal expands on click and collapses on the next click. */
+/** Items of the day in meal-type order; a meal expands on click and collapses on a click on its header or details. */
 export function PlanItems({ items }: { items: readonly MealPlanItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -73,7 +74,7 @@ export function PlanItems({ items }: { items: readonly MealPlanItem[] }) {
                   <ItemSummary item={item} />
                 </button>
                 {isOpen && (
-                  <div className="meals-details plans-item-details">
+                  <div className="meals-details plans-item-details" onClick={collapseOnClick(() => setOpenIndex(null))}>
                     <MealDetails meal={meal} steps={item.steps} macrosOnly />
                   </div>
                 )}
