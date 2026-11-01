@@ -6,3 +6,10 @@ export function normalize(text: string): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
 }
+
+/** Search: every word of the query must appear in the text (both normalized). */
+export function matchesWords(text: string, query: string): boolean {
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const normalized = normalize(text);
+  return words.every((word) => normalized.includes(word));
+}

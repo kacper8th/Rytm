@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "./MealDetails";
 import { getMeals, mealIngredients, mealTotals, type GainMacro, type GainSteps, type Meal } from "./meals";
-import { normalize } from "../../../shared/text";
+import { matchesWords } from "../../../shared/text";
 import "./MealsScreen.css";
 
 type SortKey = "name" | "kcal" | "protein" | "fat" | "carbs";
@@ -17,13 +17,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "fat", label: "Tłuszcz (g)" },
   { key: "carbs", label: "Węglowodany (g)" },
 ];
-
-/** Every word of the query must appear in the name. */
-function matchesQuery(meal: Meal, query: string): boolean {
-  const words = normalize(query).split(/\s+/).filter(Boolean);
-  const text = normalize(meal.name);
-  return words.every((word) => text.includes(word));
-}
 
 export function MealsScreen() {
   const [sort, setSort] = useState<Sort>({ key: "name", descending: false });
@@ -42,7 +35,7 @@ export function MealsScreen() {
   const meals = useMemo(() => {
     const direction = sort.descending ? -1 : 1;
     return allMeals
-      .filter((meal) => matchesQuery(meal, query))
+      .filter((meal) => matchesWords(meal.name, query))
       .sort((a, b) => {
         if (sort.key === "name") return collator.compare(a.name, b.name) * direction;
         const diff = baseTotals.get(a.id)![sort.key] - baseTotals.get(b.id)![sort.key];

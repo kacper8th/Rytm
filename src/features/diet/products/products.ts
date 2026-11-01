@@ -1,4 +1,4 @@
-import { normalize } from "../../../shared/text";
+import { matchesWords } from "../../../shared/text";
 import { PRODUCT_WARNINGS, PRODUCTS } from "./products.data";
 
 /**
@@ -88,9 +88,7 @@ export function nutrientAmount(product: Product, key: NutrientKey): number {
 
 /** Search: every word of the query must appear in the name, brand or category. Used by Products and Shopping list. */
 export function productMatches(product: Product, query: string): boolean {
-  const words = normalize(query).split(/\s+/).filter(Boolean);
-  const text = normalize(`${product.name} ${product.brand ?? ""} ${product.category}`);
-  return words.every((word) => text.includes(word));
+  return matchesWords(`${product.name} ${product.brand ?? ""} ${product.category}`, query);
 }
 
 export function getProductWarnings(): readonly ProductWarning[] {
