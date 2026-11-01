@@ -48,33 +48,6 @@
   cursor: pointer;
 }
 
-/* filter by day: "Wszystkie · Pt 6.11 · …", several days can be on */
-.shopping-days-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
-}
-
-.shopping-day-button {
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  color: var(--color-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-}
-
-.shopping-day-button.is-active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-bg);
-  font-weight: 700;
-}
-
 .shopping-group {
   margin-bottom: var(--space-4);
 }

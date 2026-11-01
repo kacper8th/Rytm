@@ -53,19 +53,19 @@ function writeHideChecked(value: boolean) {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** Chosen days of the filter by day; empty = "Wszystkie". Not remembered — every opening starts with all days. */
-type DayFilter = readonly string[];
+/** Chosen day of the filter by day; null = "Wszystkie". Not remembered — every opening starts with all days. */
+type DayFilter = string | null;
 
-/** Grams for the chosen days plus grams added by hand (they have no date); all days when the filter is empty. */
-function filteredGrams(item: ShoppingListItem, days: DayFilter): number {
-  if (days.length === 0) return itemGrams(item);
-  return days.reduce((sum, date) => sum + (item.days[date] ?? 0), item.addedGrams ?? 0);
+/** Grams for the chosen day plus grams added by hand (they have no date); all days when no day is chosen. */
+function filteredGrams(item: ShoppingListItem, day: DayFilter): number {
+  if (day === null) return itemGrams(item);
+  return (item.days[day] ?? 0) + (item.addedGrams ?? 0);
 }
 
-/** With the filter on: products needed on a chosen day; what was added by hand is always shown. */
-function isShownForDays(item: ShoppingListItem, days: DayFilter): boolean {
-  if (days.length === 0 || isOwnItem(item) || item.addedGrams !== null) return true;
-  return days.some((date) => item.days[date] !== undefined);
+/** With a day chosen: products needed on that day; what was added by hand is always shown. */
+function isShownForDay(item: ShoppingListItem, day: DayFilter): boolean {
+  if (day === null || isOwnItem(item) || item.addedGrams !== null) return true;
+  return item.days[day] !== undefined;
 }
 
 /** Products grouped by category (categories A–Z), sorted within each group; by amount, own items (no grams) go last. */
@@ -100,7 +100,7 @@ export function ShoppingListScreen() {
   const [sort, setSort] = useState<Sort>({ key: "name", descending: false });
   const [hideChecked, setHideChecked] = useState(readHideChecked);
   const [openProduct, setOpenProduct] = useState<string | null>(null);
-  const [dayFilter, setDayFilter] = useState<DayFilter>([]);
+  const [dayFilter, setDayFilter] = useState<DayFilter>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,19 +117,15 @@ export function ShoppingListScreen() {
   const list = load.status === "ready" ? load.list : null;
   const groups = useMemo(() => {
     if (!list) return [];
-    const shown = list.items.filter((i) => (!hideChecked || !i.checked) && isShownForDays(i, dayFilter));
+    const shown = list.items.filter((i) => (!hideChecked || !i.checked) && isShownForDay(i, dayFilter));
     return groupItems(shown, sort, dayFilter);
   }, [list, hideChecked, sort, dayFilter]);
 
-  /** Days some product is needed on, in date order — the buttons of the filter. */
+  /** Days some product is needed on, in date order — the options of the filter. */
   const listDays = useMemo(
     () => (list ? [...new Set(list.items.flatMap((i) => Object.keys(i.days)))].sort() : []),
     [list],
   );
-
-  function toggleDay(date: string) {
-    setDayFilter((days) => (days.includes(date) ? days.filter((d) => d !== date) : [...days, date]));
-  }
 
   function run(task: () => Promise<void>) {
     const attempt = async () => {
@@ -287,31 +283,28 @@ export function ShoppingListScreen() {
           </label>
 
           {listDays.length > 0 && (
-            <div className="shopping-days-filter" role="group" aria-label="Filtruj po dniu">
-              <button
-                type="button"
-                className={"shopping-day-button" + (dayFilter.length === 0 ? " is-active" : "")}
-                aria-pressed={dayFilter.length === 0}
-                onClick={() => setDayFilter([])}
+            <div className="meals-sort">
+              <label className="meals-sort-label" htmlFor="shopping-day">
+                Dzień
+              </label>
+              <select
+                id="shopping-day"
+                className="meals-sort-select"
+                value={dayFilter ?? ""}
+                onChange={(e) => setDayFilter(e.target.value || null)}
               >
-                Wszystkie
-              </button>
-              {listDays.map((date) => (
-                <button
-                  key={date}
-                  type="button"
-                  className={"shopping-day-button" + (dayFilter.includes(date) ? " is-active" : "")}
-                  aria-pressed={dayFilter.includes(date)}
-                  onClick={() => toggleDay(date)}
-                >
-                  {dateLabel(date)}
-                </button>
-              ))}
+                <option value="">Wszystkie</option>
+                {listDays.map((date) => (
+                  <option key={date} value={date}>
+                    {dateLabel(date)}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
           {groups.length === 0 && (
-            <p className="meals-empty">{dayFilter.length > 0 ? "Brak produktów na wybrane dni." : "Wszystko kupione."}</p>
+            <p className="meals-empty">{dayFilter !== null ? "Brak produktów na wybrany dzień." : "Wszystko kupione."}</p>
           )}
 
           {groups.map((group) => (
@@ -348,7 +341,7 @@ export function ShoppingListScreen() {
                             <>
                               {number.format(filteredGrams(item, dayFilter))}
                               <span className="meals-unit"> g</span>
-                              {dayFilter.length > 0 && (
+                              {dayFilter !== null && (
                                 <span className="meals-unit"> (z {number.format(itemGrams(item))} g)</span>
                               )}
                             </>

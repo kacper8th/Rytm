@@ -29,7 +29,7 @@ export type WeekSummary = { weekStart: string; days: number };
 
 export const DAYS_IN_WEEK = 7;
 
-const DAY_NAMES = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Ndz"];
+const DAY_NAMES = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 const MONTH_NAMES = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 
 // ---- dates (local time; a week is identified by its Monday) ----
