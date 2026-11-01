@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "./MealDetails";
 import { getMeals, mealIngredients, mealTotals, type GainMacro, type GainSteps, type Meal } from "./meals";
+import { normalize } from "../../../shared/text";
 import "./MealsScreen.css";
 
 type SortKey = "name" | "kcal" | "protein" | "fat" | "carbs";
@@ -16,15 +17,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "fat", label: "Tłuszcz (g)" },
   { key: "carbs", label: "Węglowodany (g)" },
 ];
-
-/** Lower case without Polish letters, so "nalesniki" finds "naleśniki". */
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
 
 /** Every word of the query must appear in the name. */
 function matchesQuery(meal: Meal, query: string): boolean {

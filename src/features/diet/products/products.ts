@@ -1,3 +1,4 @@
+import { normalize } from "../../../shared/text";
 import { PRODUCT_WARNINGS, PRODUCTS } from "./products.data";
 
 /**
@@ -83,15 +84,6 @@ export function getProducts(): readonly Product[] {
 /** Amount per 100 g for calculations (e.g. meals) — "no data" counts as 0. */
 export function nutrientAmount(product: Product, key: NutrientKey): number {
   return product.nutrients[key] ?? 0;
-}
-
-/** Lower case without Polish letters, so "zolty" finds "żółty". */
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
 }
 
 /** Search: every word of the query must appear in the name, brand or category. Used by Products and Shopping list. */
