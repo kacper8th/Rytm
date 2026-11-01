@@ -9,6 +9,8 @@ import {
   itemGrams,
   isInPantry,
   itemsToBuy,
+  missingByDay,
+  missingGrams,
   rangeDates,
   setItemChecked,
   type ShoppingList,
@@ -58,10 +60,19 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 /** Chosen day of the filter by day; null = "Wszystkie". Not remembered — every opening starts with all days. */
 type DayFilter = string | null;
 
-/** Grams for the chosen day plus grams added by hand (they have no date); all days when no day is chosen. */
+/**
+ * Grams to buy for the chosen day plus grams added by hand (they have no date); all days when no day is chosen.
+ * Planned grams covered by the Pantry are left out (see missingByDay()).
+ */
 function filteredGrams(item: ShoppingListItem, day: DayFilter): number {
-  if (day === null) return itemGrams(item);
-  return (item.days[day] ?? 0) + (item.addedGrams ?? 0);
+  if (day === null) return missingGrams(item);
+  return (missingByDay(item)[day] ?? 0) + (item.addedGrams ?? 0);
+}
+
+/** Covered by the Pantry — for the chosen day, or for the whole list when no day is chosen. */
+function isCovered(item: ShoppingListItem, day: DayFilter): boolean {
+  if (day === null) return isInPantry(item);
+  return item.pantryGrams !== null && filteredGrams(item, day) === 0;
 }
 
 /** With a day chosen: products needed on that day; what was added by hand is always shown. */
@@ -122,12 +133,13 @@ export function ShoppingListScreen() {
   const groups = useMemo(() => {
     if (!list) return [];
     const shown = list.items.filter(
-      (i) => (showPantry || !isInPantry(i)) && (!hideChecked || !i.checked) && isShownForDay(i, dayFilter),
+      (i) => (showPantry || !isCovered(i, dayFilter)) && (!hideChecked || !i.checked) && isShownForDay(i, dayFilter),
     );
     return groupItems(shown, sort, dayFilter);
   }, [list, showPantry, hideChecked, sort, dayFilter]);
 
-  const pantryCount = list?.items.filter(isInPantry).length ?? 0;
+  /** Products covered by the Pantry — for the chosen day, or for the whole list. */
+  const pantryCount = list?.items.filter((i) => isShownForDay(i, dayFilter) && isCovered(i, dayFilter)).length ?? 0;
 
   /** Days some product is needed on, in date order — the options of the filter. */
   const listDays = useMemo(
@@ -331,7 +343,8 @@ export function ShoppingListScreen() {
                   const isOpen = openProduct === item.productId;
                   const own = isOwnItem(item);
                   const days = Object.entries(item.days).sort(([a], [b]) => a.localeCompare(b));
-                  const inPantry = isInPantry(item);
+                  const inPantry = isCovered(item, dayFilter);
+                  const planned = itemGrams({ days: item.days });
                   return (
                     <li
                       key={item.productId}
@@ -365,12 +378,18 @@ export function ShoppingListScreen() {
                               {number.format(filteredGrams(item, dayFilter))}
                               <span className="meals-unit"> g</span>
                               {dayFilter !== null && (
-                                <span className="meals-unit"> (z {number.format(itemGrams(item))} g)</span>
+                                <span className="meals-unit"> (z {number.format(missingGrams(item))} g)</span>
                               )}
                             </>
                           )}
                         </span>
                       </button>
+                      {item.pantryGrams !== null && planned > 0 && (
+                        <p className="shopping-pantry-note">
+                          potrzeba {number.format(planned)} g · w magazynie {number.format(item.pantryGrams)} g
+                          {item.addedGrams !== null && <> · dodane ręcznie {number.format(item.addedGrams)} g</>}
+                        </p>
+                      )}
                       {isOpen && (
                         <div className="shopping-days">
                           {days.length > 0 && (

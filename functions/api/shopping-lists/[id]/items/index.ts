@@ -13,8 +13,8 @@ import {
 /**
  * POST /api/shopping-lists/:id/items — adds an item by hand (Manual items); returns the item as saved.
  * - body { productId, name, category, grams }: a product — added to its row (added_grams) and un-checked; a new row
- *   (no days) when the product is not on the list yet. in_pantry stays: a row with added grams is not treated as in the
- *   pantry, and removing the addition brings the mark back;
+ *   (no days) when the product is not on the list yet. pantry_grams stays: the pantry covers only the planned grams,
+ *   grams added by hand are always to buy;
  * - body { name, amount }: an own item (id "custom-…", category "inne").
  */
 export const onRequestPost: PagesFunction<Env, "id"> = async ({ env, params, request }) => {

@@ -127,6 +127,14 @@
   opacity: 0.55;
 }
 
+/* "potrzeba 500 g · w magazynie 300 g" under a product partly or fully covered by the pantry */
+.shopping-pantry-note {
+  grid-column: 2;
+  margin: calc(-1 * var(--space-2)) 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
 .shopping-days {
   grid-column: 2;
   display: grid;

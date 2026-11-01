@@ -20,8 +20,8 @@ export type ShoppingListItem = {
   addedGrams: number | null;
   /** Own item (id "custom-…"): amount as typed, or null. */
   amount: string | null;
-  /** The product was in the pantry when the list was created; with no grams added by hand, not counted as a thing to buy. */
-  inPantry: boolean;
+  /** Grams of the product in the Pantry (null = not there); kept in sync on current lists. */
+  pantryGrams: number | null;
 };
 
 /** Own items (Manual items) have ids with this prefix; product ids are slugs and never start with it. */
@@ -46,11 +46,11 @@ export type ShoppingListItemRow = {
   checked: number;
   added_grams: number | null;
   amount: string | null;
-  in_pantry: number;
+  pantry_grams: number | null;
 };
 
 /** Columns of shopping_list_items read by rowToItem(). */
-export const ITEM_COLUMNS = "product_id, name, category, days, checked, added_grams, amount, in_pantry";
+export const ITEM_COLUMNS = "product_id, name, category, days, checked, added_grams, amount, pantry_grams";
 
 /** A list id is a random UUID. */
 export const isListId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f-]{36}$/.test(value);
@@ -85,7 +85,7 @@ export function rowToItem(row: ShoppingListItemRow): ShoppingListItem {
     checked: row.checked === 1,
     addedGrams: row.added_grams,
     amount: row.amount,
-    inPantry: row.in_pantry === 1,
+    pantryGrams: row.pantry_grams,
   };
 }
 
@@ -179,7 +179,8 @@ export function parseListBody(body: unknown): NewList | string {
     if (!isText(name)) return `Item ${i}: missing name.`;
     if (!isText(category)) return `Item ${i}: missing category.`;
     if (!isRecord(item.days) || Object.keys(item.days).length === 0) return `Item ${i}: days must be a non-empty object.`;
-    if (item.inPantry !== undefined && typeof item.inPantry !== "boolean") return `Item ${i}: inPantry must be true or false.`;
+    const pantryGrams = item.pantryGrams ?? null;
+    if (pantryGrams !== null && !isGrams(pantryGrams)) return `Item ${i}: pantryGrams must be > 0 or empty.`;
 
     const itemDays: Record<string, number> = {};
     for (const [date, grams] of Object.entries(item.days)) {
@@ -187,7 +188,7 @@ export function parseListBody(body: unknown): NewList | string {
       if (typeof grams !== "number" || !(grams > 0) || grams > 100_000) return `Item ${i}: grams must be > 0.`;
       itemDays[date] = grams;
     }
-    clean.push({ productId, name, category, days: itemDays, inPantry: item.inPantry === true });
+    clean.push({ productId, name, category, days: itemDays, pantryGrams });
   }
 
   return { from, to, plannedDays: plannedDays as number, items: clean };

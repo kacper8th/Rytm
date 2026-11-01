@@ -23,22 +23,45 @@ export type ShoppingListItem = {
   addedGrams: number | null;
   /** Own item (Manual items): amount as typed, or null. */
   amount: string | null;
-  /** The product was in the Pantry when the list was created (snapshot); see isInPantry(). */
-  inPantry: boolean;
+  /** Grams of the product in the Pantry (null = not there); kept in sync on current lists. See missingGrams(). */
+  pantryGrams: number | null;
 };
 
+// ---- pantry: what is missing ----
+
+/** Fields needed to tell what is missing; a new list's items have no added grams yet. */
+type PantryFields = Pick<ShoppingListItem, "days" | "pantryGrams"> & { addedGrams?: number | null };
+
 /**
- * Treated as in the Pantry — hidden by default, not counted as a thing to buy: marked inPantry and no grams added by hand.
- * Adding grams by hand means it is to be bought; removing the addition brings the mark back.
+ * Planned grams not covered by the Pantry, per day. The pantry covers the days in order, the earliest first
+ * (what is at home is used first).
  */
-export function isInPantry(item: Pick<ShoppingListItem, "inPantry"> & { addedGrams?: number | null }): boolean {
-  return item.inPantry && (item.addedGrams ?? null) === null;
+export function missingByDay(item: PantryFields): Record<string, number> {
+  let left = item.pantryGrams ?? 0;
+  const missing: Record<string, number> = {};
+  for (const [date, grams] of Object.entries(item.days).sort(([a], [b]) => a.localeCompare(b))) {
+    const covered = Math.min(left, grams);
+    left -= covered;
+    missing[date] = grams - covered;
+  }
+  return missing;
 }
 
-/** Items to buy — without pantry products; used for "produkty" and "kupione x/y". */
-export function itemsToBuy<T extends Pick<ShoppingListItem, "inPantry"> & { addedGrams?: number | null }>(
-  items: readonly T[],
-): T[] {
+/**
+ * Grams to buy: planned grams not covered by the Pantry, plus grams added by hand — the pantry covers only the plan,
+ * what was added by hand is always to buy. Without a pantry entry this is all the grams (as itemGrams()).
+ */
+export function missingGrams(item: PantryFields): number {
+  return Object.values(missingByDay(item)).reduce((sum, grams) => sum + grams, item.addedGrams ?? 0);
+}
+
+/** Covered by the Pantry — nothing to buy: hidden by default, not counted ("Pokaż z magazynu" shows it). */
+export function isInPantry(item: PantryFields): boolean {
+  return item.pantryGrams !== null && missingGrams(item) === 0;
+}
+
+/** Items to buy — without products covered by the Pantry; used for "produkty" and "kupione x/y". */
+export function itemsToBuy<T extends PantryFields>(items: readonly T[]): T[] {
   return items.filter((item) => !isInPantry(item));
 }
 
@@ -55,7 +78,7 @@ export type ShoppingListSummary = {
   /** Days of the range that had a plan. */
   plannedDays: number;
   createdAt: string;
-  /** Number of products and of bought products, both without pantry products. */
+  /** Number of products and of bought products, both without products covered by the Pantry. */
   items: number;
   checked: number;
 };
@@ -108,13 +131,13 @@ export function itemGrams(item: Pick<ShoppingListItem, "days"> & { addedGrams?: 
 
 /**
  * Loads the planned days of the range (one request per week) and sums their products;
- * products in the Pantry are marked `inPantry`, whatever the pantry grams.
+ * each product gets its grams in the Pantry (`pantryGrams`), so the list shows only what is missing.
  */
 export async function loadRangeItems(from: string, to: string): Promise<RangeItems> {
   const dates = rangeDates(from, to);
   const weeks = [...new Set(dates.map((date) => weekStartOf(fromIsoDate(date))))];
   const [plans, pantry] = await Promise.all([Promise.all(weeks.map(getWeekPlan)), getPantry()]);
-  const inPantry = new Set(pantry.map((item) => item.productId));
+  const pantryGrams = new Map(pantry.map((item) => [item.productId, item.grams]));
 
   const inRange = new Set(dates);
   const days: { date: string; items: MealPlanItem[] }[] = [];
@@ -125,12 +148,15 @@ export async function loadRangeItems(from: string, to: string): Promise<RangeIte
     }
   }
 
-  const { items, missing } = buildItems(days, inPantry);
+  const { items, missing } = buildItems(days, pantryGrams);
   return { rangeDays: dates.length, plannedDays: days.length, items, missing };
 }
 
 /** Grams per product and day — the same ingredients as on the week screen (meals after the plan's gain steps). */
-function buildItems(days: readonly { date: string; items: readonly MealPlanItem[] }[], inPantry: ReadonlySet<string>) {
+function buildItems(
+  days: readonly { date: string; items: readonly MealPlanItem[] }[],
+  pantryGrams: ReadonlyMap<string, number>,
+) {
   const byProduct = new Map<string, NewShoppingListItem>();
   let missing = 0;
   for (const { date, items } of days) {
@@ -148,7 +174,7 @@ function buildItems(days: readonly { date: string; items: readonly MealPlanItem[
             name: product.name,
             category: product.category,
             days: {},
-            inPantry: inPantry.has(product.id),
+            pantryGrams: pantryGrams.get(product.id) ?? null,
           };
           byProduct.set(product.id, entry);
         }

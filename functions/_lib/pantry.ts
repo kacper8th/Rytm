@@ -22,6 +22,20 @@ export function rowToPantryItem(row: PantryItemRow): PantryItem {
   return { productId: row.product_id, grams: row.grams, updatedAt: row.updated_at };
 }
 
+/**
+ * Copies the product's pantry grams (NULL when it is no longer in the pantry) to current shopping lists — lists whose
+ * range has not ended (date_to ≥ today, UTC). Finished lists keep theirs as history. The checked state is not changed.
+ * Runs in the same batch as the pantry change, after it.
+ */
+export function syncCurrentLists(db: D1Database, productId: string): D1PreparedStatement {
+  return db
+    .prepare(
+      `UPDATE shopping_list_items SET pantry_grams = (SELECT grams FROM pantry_items WHERE product_id = ?1)
+       WHERE product_id = ?1 AND list_id IN (SELECT id FROM shopping_lists WHERE date_to >= date('now'))`,
+    )
+    .bind(productId);
+}
+
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isId = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 200;
 const isGrams = (v: unknown): v is number => typeof v === "number" && v > 0 && v <= 100_000;
