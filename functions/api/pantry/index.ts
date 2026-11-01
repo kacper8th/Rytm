@@ -1,4 +1,4 @@
-import { badRequest, json, type Env } from "../../_lib/week-plan";
+import { badRequest, json, type Env } from "../../_lib/http";
 import { syncCurrentLists, PANTRY_COLUMNS, parseAddBody, rowToPantryItem, type PantryItemRow } from "../../_lib/pantry";
 
 /** GET /api/pantry — all pantry items. */

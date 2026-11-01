@@ -1,4 +1,5 @@
-import { badRequest, json, parseWeekStart, rowToDay, type Env, type WeekPlanDayRow } from "../../../_lib/week-plan";
+import { badRequest, json, type Env } from "../../../_lib/http";
+import { parseWeekStart, rowToDay, type WeekPlanDayRow } from "../../../_lib/week-plan";
 
 /**
  * POST /api/week-plans/:week/copy — body { from }: the week becomes an exact copy of the `from` week

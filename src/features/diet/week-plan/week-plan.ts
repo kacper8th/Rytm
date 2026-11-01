@@ -1,3 +1,4 @@
+import { request } from "../../../shared/api";
 import type { MealPlanItem } from "../meal-plans/meal-plans";
 
 /**
@@ -111,22 +112,6 @@ export function dateLabel(value: string): string {
 }
 
 // ---- API ----
-
-/** fetch with a Polish error message; also used by other user-data modules (e.g. Shopping list). */
-export async function request(url: string, init?: RequestInit): Promise<Response> {
-  let response: Response;
-  try {
-    response = await fetch(url, init);
-  } catch {
-    // Also an expired Cloudflare Access login: the redirect to the login page cannot be followed by fetch.
-    throw new Error("Brak połączenia z serwerem. Sprawdź internet albo odśwież stronę.");
-  }
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(`Błąd serwera (${response.status})${body?.error ? `: ${body.error}` : ""}`);
-  }
-  return response;
-}
 
 export async function getWeekPlan(weekStart: string): Promise<WeekPlan> {
   const response = await request(`/api/week-plans/${weekStart}`);

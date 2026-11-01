@@ -1,4 +1,4 @@
-import { json, type Env } from "../../_lib/week-plan";
+import { json, type Env } from "../../_lib/http";
 
 /** GET /api/week-plans — weeks that have saved days, newest first (for picking a week to copy from). */
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {

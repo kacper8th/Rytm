@@ -1,5 +1,5 @@
 import type { Product } from "../../../products/products";
-import { request } from "../../week-plan";
+import { request } from "../../../../../shared/api";
 import type { ShoppingListItem } from "../shopping-list";
 
 /**

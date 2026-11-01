@@ -3,10 +3,6 @@
  * The server checks only the shape of a day; whether meal / product ids exist is checked on display.
  */
 
-export interface Env {
-  DB: D1Database;
-}
-
 /** Must match MEAL_TYPES in src/features/diet/meal-plans/meal-plans.ts. */
 const MEAL_TYPE_MAX: Record<string, number> = {
   "śniadanie": 1,
@@ -38,17 +34,6 @@ export type WeekPlanDayRow = {
   source: string | null;
   updated_at: string;
 };
-
-export function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
-}
-
-export function badRequest(error: string): Response {
-  return json({ error }, 400);
-}
 
 /** A Monday as YYYY-MM-DD, or null. */
 export function parseWeekStart(value: unknown): string | null {

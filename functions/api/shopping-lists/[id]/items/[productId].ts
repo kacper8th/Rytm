@@ -1,7 +1,6 @@
-import { badRequest, json, type Env } from "../../../../_lib/week-plan";
+import { badRequest, json, notFound, type Env } from "../../../../_lib/http";
 import {
   ITEM_COLUMNS,
-  notFound,
   parseEditBody,
   rowToItem,
   type ShoppingListItemRow,

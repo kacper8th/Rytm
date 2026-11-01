@@ -1,4 +1,5 @@
-import { badRequest, json, parseDay, parseDayBody, parseWeekStart, type Env } from "../../../../_lib/week-plan";
+import { badRequest, json, type Env } from "../../../../_lib/http";
+import { parseDay, parseDayBody, parseWeekStart } from "../../../../_lib/week-plan";
 
 type Params = "week" | "day";
 

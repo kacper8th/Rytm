@@ -1,4 +1,4 @@
-import { request } from "../week-plan/week-plan";
+import { request } from "../../../shared/api";
 
 /**
  * Pantry — products kept at home, user data saved on the server (Cloudflare D1 via /api/pantry).

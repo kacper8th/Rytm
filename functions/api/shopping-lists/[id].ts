@@ -1,8 +1,7 @@
-import { badRequest, json, type Env } from "../../_lib/week-plan";
+import { badRequest, json, notFound, type Env } from "../../_lib/http";
 import {
   isListId,
   ITEM_COLUMNS,
-  notFound,
   rowToItem,
   rowToSummary,
   type ShoppingListItemRow,

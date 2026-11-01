@@ -1,4 +1,4 @@
-import { badRequest, json, type Env } from "../../_lib/week-plan";
+import { badRequest, json, type Env } from "../../_lib/http";
 import { parseListBody, rowToSummary, type ShoppingListRow } from "../../_lib/shopping-list";
 
 type SummaryRow = ShoppingListRow & { items: number; checked: number };

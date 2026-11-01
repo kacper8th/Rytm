@@ -1,5 +1,4 @@
-import { badRequest, json, type Env } from "../../_lib/week-plan";
-import { notFound } from "../../_lib/shopping-list";
+import { badRequest, json, notFound, type Env } from "../../_lib/http";
 import { PANTRY_COLUMNS, parseEditBody, rowToPantryItem, syncCurrentLists, type PantryItemRow } from "../../_lib/pantry";
 
 /**

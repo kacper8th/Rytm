@@ -1,4 +1,5 @@
-import { badRequest, json, parseWeekStart, rowToDay, type Env, type WeekPlanDayRow } from "../../_lib/week-plan";
+import { badRequest, json, type Env } from "../../_lib/http";
+import { parseWeekStart, rowToDay, type WeekPlanDayRow } from "../../_lib/week-plan";
 
 /** GET /api/week-plans/:week — saved days of the week (days without a plan are left out). */
 export const onRequestGet: PagesFunction<Env, "week"> = async ({ env, params }) => {

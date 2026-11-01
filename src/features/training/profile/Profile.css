@@ -1,0 +1,214 @@
+.profile {
+  max-width: 640px;
+}
+
+/* header: back link + title */
+.profile-header {
+  margin-bottom: var(--space-4);
+}
+
+.profile-back {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.profile-title {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+/* saving / error line */
+.profile-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.profile-status.is-error {
+  color: var(--color-accent);
+}
+
+.profile-empty,
+.profile-hint {
+  margin: var(--space-2) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* sections */
+.profile-section {
+  margin-bottom: var(--space-5);
+}
+
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.profile-section-title {
+  flex: 1;
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-lg);
+}
+
+.profile-section-header .profile-section-title {
+  margin: 0;
+}
+
+/* body areas inside "Stan zdrowia" */
+.profile-area {
+  margin-bottom: var(--space-4);
+}
+
+.profile-area-title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-size-md);
+}
+
+/* list in a card; rows: main text, value, ✎ / ✕ */
+.profile-list {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+}
+
+.profile-row + .profile-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.profile-row-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-row-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.profile-row > .profile-form {
+  flex: 1;
+}
+
+/* basic data: label on the left, value on the right */
+.profile-facts dt {
+  flex: 1;
+  color: var(--color-text-muted);
+}
+
+.profile-facts dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* buttons */
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.profile-button {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.profile-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.profile-icon {
+  min-width: 32px;
+  height: 32px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.profile-button:disabled,
+.profile-icon:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* forms: fields stacked; "is-inline" puts them in one row when there is room */
+.profile-form {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.profile-form.is-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.profile-field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.profile-field.is-grow {
+  flex: 1;
+  min-width: 160px;
+}
+
+.profile-input {
+  min-height: 40px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-md);
+}
+
+textarea.profile-input {
+  padding: var(--space-2);
+  resize: vertical;
+}
+
+@media (min-width: 900px) {
+  .profile-button:hover:not(:disabled),
+  .profile-icon:hover:not(:disabled) {
+    border-color: var(--color-accent);
+  }
+}

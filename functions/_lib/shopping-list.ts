@@ -3,8 +3,6 @@
  * Items are calculated by the app (product and meal data live in the front-end code); the server checks only their shape.
  */
 
-import { json } from "./week-plan";
-
 /** Must match MAX_RANGE_DAYS in src/features/diet/week-plan/shopping-list/shopping-list.ts. */
 export const MAX_RANGE_DAYS = 31;
 const MAX_ITEMS = 500;
@@ -54,10 +52,6 @@ export const ITEM_COLUMNS = "product_id, name, category, days, checked, added_gr
 
 /** A list id is a random UUID. */
 export const isListId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f-]{36}$/.test(value);
-
-export function notFound(error: string): Response {
-  return json({ error }, 404);
-}
 
 /** A date as YYYY-MM-DD, or null. */
 export function parseDate(value: unknown): string | null {

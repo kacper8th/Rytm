@@ -1,6 +1,7 @@
+import { request } from "../../../../shared/api";
 import { isItemKnown, itemIngredients, type MealPlanItem } from "../../meal-plans/meal-plans";
 import { getPantry } from "../../pantry/pantry";
-import { fromIsoDate, getWeekPlan, request, toIsoDate, weekStartOf, dayDate } from "../week-plan";
+import { fromIsoDate, getWeekPlan, toIsoDate, weekStartOf, dayDate } from "../week-plan";
 
 /**
  * Shopping lists — user data saved on the server (Cloudflare D1 via /api/shopping-lists).
