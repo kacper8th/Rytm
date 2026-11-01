@@ -1,13 +1,13 @@
 import { badRequest, json, type Env } from "../../_lib/week-plan";
 import {
+  isListId,
+  ITEM_COLUMNS,
   notFound,
   rowToItem,
   rowToSummary,
   type ShoppingListItemRow,
   type ShoppingListRow,
 } from "../../_lib/shopping-list";
-
-const isListId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f-]{36}$/.test(value);
 
 /** GET /api/shopping-lists/:id — the list with all its items. */
 export const onRequestGet: PagesFunction<Env, "id"> = async ({ env, params }) => {
@@ -18,7 +18,7 @@ export const onRequestGet: PagesFunction<Env, "id"> = async ({ env, params }) =>
       params.id,
     ),
     env.DB.prepare(
-      "SELECT product_id, name, category, days, checked FROM shopping_list_items WHERE list_id = ? ORDER BY name",
+      `SELECT ${ITEM_COLUMNS} FROM shopping_list_items WHERE list_id = ? ORDER BY name`,
     ).bind(params.id),
   ]);
   const row = (list.results as ShoppingListRow[])[0];

@@ -5,6 +5,7 @@ import {
   getProductWarnings,
   NUTRIENT_GROUPS,
   NUTRIENTS,
+  productMatches,
   type NutrientKey,
   type Product,
 } from "./products";
@@ -17,22 +18,6 @@ const collator = new Intl.Collator("pl");
 const number = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
 
 const MACROS_ON_CARD: NutrientKey[] = ["protein", "fat", "carbs"];
-
-/** Lower case without Polish letters, so "zolty" finds "żółty". */
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
-
-/** Every word of the query must appear in the name, brand or category. */
-function matchesQuery(product: Product, query: string): boolean {
-  const words = normalize(query).split(/\s+/).filter(Boolean);
-  const text = normalize(`${product.name} ${product.brand ?? ""} ${product.category}`);
-  return words.every((word) => text.includes(word));
-}
 
 /** Products without data for the sorted nutrient always go last, in both directions. */
 function sortProducts(products: readonly Product[], sort: Sort): Product[] {
@@ -74,7 +59,7 @@ export function ProductsScreen() {
   const allProducts = getProducts();
   const warnings = getProductWarnings();
   const products = useMemo(
-    () => sortProducts(allProducts.filter((p) => matchesQuery(p, query)), sort),
+    () => sortProducts(allProducts.filter((p) => productMatches(p, query)), sort),
     [allProducts, query, sort],
   );
 

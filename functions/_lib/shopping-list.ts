@@ -13,10 +13,20 @@ export type ShoppingListItem = {
   productId: string;
   name: string;
   category: string;
-  /** Grams per day, keyed by YYYY-MM-DD. */
+  /** Grams per day, keyed by YYYY-MM-DD; empty for items added only by hand. */
   days: Record<string, number>;
   checked: boolean;
+  /** Grams added by hand to a product (Manual items), or null. */
+  addedGrams: number | null;
+  /** Own item (id "custom-…"): amount as typed, or null. */
+  amount: string | null;
 };
+
+/** Own items (Manual items) have ids with this prefix; product ids are slugs and never start with it. */
+export const CUSTOM_PREFIX = "custom-";
+
+/** Category of own items — the group "Inne", together with Products of that category. */
+export const CUSTOM_CATEGORY = "inne";
 
 export type ShoppingListRow = {
   id: string;
@@ -32,7 +42,15 @@ export type ShoppingListItemRow = {
   category: string;
   days: string;
   checked: number;
+  added_grams: number | null;
+  amount: string | null;
 };
+
+/** Columns of shopping_list_items read by rowToItem(). */
+export const ITEM_COLUMNS = "product_id, name, category, days, checked, added_grams, amount";
+
+/** A list id is a random UUID. */
+export const isListId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f-]{36}$/.test(value);
 
 export function notFound(error: string): Response {
   return json({ error }, 404);
@@ -62,13 +80,72 @@ export function rowToItem(row: ShoppingListItemRow): ShoppingListItem {
     category: row.category,
     days: JSON.parse(row.days) as Record<string, number>,
     checked: row.checked === 1,
+    addedGrams: row.added_grams,
+    amount: row.amount,
   };
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isText = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 200;
 
-type NewList = { from: string; to: string; plannedDays: number; items: Omit<ShoppingListItem, "checked">[] };
+type NewList = {
+  from: string;
+  to: string;
+  plannedDays: number;
+  items: Omit<ShoppingListItem, "checked" | "addedGrams" | "amount">[];
+};
+
+const isGrams = (v: unknown): v is number => typeof v === "number" && v > 0 && v <= 100_000;
+
+/** Amount of an own item: text up to 100 characters; empty → null. */
+function parseAmount(value: unknown): string | null | undefined {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "string" || value.length > 100) return undefined;
+  return value.trim() || null;
+}
+
+export type AddItem =
+  | { kind: "product"; productId: string; name: string; category: string; grams: number }
+  | { kind: "own"; name: string; amount: string | null };
+
+/** Checks the body of POST /api/shopping-lists/:id/items. Returns the clean item or an error message. */
+export function parseAddBody(body: unknown): AddItem | string {
+  if (!isRecord(body)) return "Body must be an object.";
+  if (body.productId === undefined) {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!isText(name)) return "`name` must not be empty (max 200 characters).";
+    const amount = parseAmount(body.amount);
+    if (amount === undefined) return "`amount` must be text (max 100 characters) or empty.";
+    return { kind: "own", name, amount };
+  }
+  const { productId, name, category, grams } = body;
+  if (!isText(productId) || productId.startsWith(CUSTOM_PREFIX)) return "Invalid productId.";
+  if (!isText(name)) return "Missing name.";
+  if (!isText(category)) return "Missing category.";
+  if (!isGrams(grams)) return "`grams` must be > 0.";
+  return { kind: "product", productId, name, category, grams };
+}
+
+export type EditItem =
+  | { kind: "checked"; checked: boolean }
+  | { kind: "addedGrams"; grams: number }
+  | { kind: "own"; name: string; amount: string | null };
+
+/** Checks the body of PATCH …/items/:productId. Returns the clean change or an error message. */
+export function parseEditBody(body: unknown): EditItem | string {
+  if (!isRecord(body)) return "Body must be an object.";
+  if (body.checked !== undefined) {
+    return typeof body.checked === "boolean" ? { kind: "checked", checked: body.checked } : "`checked` must be true or false.";
+  }
+  if (body.addedGrams !== undefined) {
+    return isGrams(body.addedGrams) ? { kind: "addedGrams", grams: body.addedGrams } : "`addedGrams` must be > 0.";
+  }
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!isText(name)) return "Body must have `checked`, `addedGrams`, or `name` (+ `amount`).";
+  const amount = parseAmount(body.amount);
+  if (amount === undefined) return "`amount` must be text (max 100 characters) or empty.";
+  return { kind: "own", name, amount };
+}
 
 /** Checks the body of POST /api/shopping-lists. Returns the clean list or an error message. */
 export function parseListBody(body: unknown): NewList | string {

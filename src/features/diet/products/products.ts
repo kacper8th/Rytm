@@ -85,6 +85,22 @@ export function nutrientAmount(product: Product, key: NutrientKey): number {
   return product.nutrients[key] ?? 0;
 }
 
+/** Lower case without Polish letters, so "zolty" finds "żółty". */
+function normalize(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/ł/g, "l")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/** Search: every word of the query must appear in the name, brand or category. Used by Products and Shopping list. */
+export function productMatches(product: Product, query: string): boolean {
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const text = normalize(`${product.name} ${product.brand ?? ""} ${product.category}`);
+  return words.every((word) => text.includes(word));
+}
+
 export function getProductWarnings(): readonly ProductWarning[] {
   return PRODUCT_WARNINGS;
 }

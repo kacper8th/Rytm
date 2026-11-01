@@ -1,0 +1,83 @@
+/* Manual items reuses the Meals / Week plan / Shopping list classes (meals-*, week-*, shopping-*); only its own parts are here. */
+
+/* add screen */
+.manual-own-option {
+  border-style: dashed;
+}
+
+.manual-form {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.manual-chosen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+}
+
+.manual-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.manual-field .meals-sort-select,
+.manual-edit .meals-sort-select {
+  padding: 0 var(--space-2);
+}
+
+.manual-back {
+  justify-self: start;
+}
+
+.manual-actions {
+  margin-top: var(--space-3);
+}
+
+/* list screen: "Dodane ręcznie: 200 g ✎ ✕" in an expanded row */
+.manual-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.manual-icon {
+  min-width: 32px;
+  height: 32px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.manual-icon:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.manual-edit {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* own items: "ręcznie" next to the name */
+.manual-mark {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}

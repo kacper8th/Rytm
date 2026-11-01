@@ -5,12 +5,15 @@ import { dateLabel, dateRangeLabel } from "../week-plan";
 import {
   deleteShoppingList,
   getShoppingList,
+  isOwnItem,
   itemGrams,
   rangeDates,
   setItemChecked,
   type ShoppingList,
   type ShoppingListItem,
 } from "./shopping-list";
+import { removeManual, setAddedGrams, setOwnItem } from "./manual-items/manual-items";
+import { ManualItemControls } from "./manual-items/ManualItemControls";
 import "../../meals/MealsScreen.css";
 import "../../meal-plans/MealPlansScreen.css";
 import "../WeekPlanScreen.css";
@@ -50,9 +53,10 @@ function writeHideChecked(value: boolean) {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** Products grouped by category (categories A–Z), sorted within each group. */
+/** Products grouped by category (categories A–Z), sorted within each group; by amount, own items (no grams) go last. */
 function groupItems(items: readonly ShoppingListItem[], sort: Sort): { category: string; items: ShoppingListItem[] }[] {
   const compare = (a: ShoppingListItem, b: ShoppingListItem) => {
+    if (sort.key === "grams" && isOwnItem(a) !== isOwnItem(b)) return isOwnItem(a) ? 1 : -1;
     const order = sort.key === "name" ? a.name.localeCompare(b.name, "pl") : itemGrams(a) - itemGrams(b);
     return sort.descending ? -order : order;
   };
@@ -131,6 +135,32 @@ export function ShoppingListScreen() {
     });
   }
 
+  /** Puts an item as saved into the list (null = removed). */
+  function replaceItem(productId: string, saved: ShoppingListItem | null) {
+    setLoad((prev) => {
+      if (prev.status !== "ready") return prev;
+      const items = prev.list.items.flatMap((i) => (i.productId !== productId ? [i] : saved ? [saved] : []));
+      return { status: "ready", list: { ...prev.list, items } };
+    });
+  }
+
+  function saveAddedGrams(item: ShoppingListItem, grams: number) {
+    run(async () => replaceItem(item.productId, await setAddedGrams(id, item.productId, grams)));
+  }
+
+  function saveOwnItem(item: ShoppingListItem, name: string, amount: string) {
+    run(async () => replaceItem(item.productId, await setOwnItem(id, item.productId, name, amount)));
+  }
+
+  /** An own item or a product added only by hand disappears; a product from the plan keeps its planned grams. */
+  function removeAddition(item: ShoppingListItem) {
+    run(async () => {
+      await removeManual(id, item.productId);
+      const onlyByHand = isOwnItem(item) || Object.keys(item.days).length === 0;
+      replaceItem(item.productId, onlyByHand ? null : { ...item, addedGrams: null });
+    });
+  }
+
   function remove(list: ShoppingList) {
     if (!window.confirm(`Usunąć listę zakupów ${dateRangeLabel(list.from, list.to)}?`)) return;
     run(async () => {
@@ -187,6 +217,12 @@ export function ShoppingListScreen() {
 
       {list && (
         <>
+          <div className="week-actions shopping-actions">
+            <Link to={`/diet/shopping-lists/${list.id}/add`} className="week-button is-primary">
+              Dodaj produkt
+            </Link>
+          </div>
+
           <div className="meals-sort">
             <label className="meals-sort-label" htmlFor="shopping-sort">
               Sortuj
@@ -226,6 +262,8 @@ export function ShoppingListScreen() {
               <ul className="shopping-items">
                 {group.items.map((item) => {
                   const isOpen = openProduct === item.productId;
+                  const own = isOwnItem(item);
+                  const days = Object.entries(item.days).sort(([a], [b]) => a.localeCompare(b));
                   return (
                     <li key={item.productId} className={"shopping-item" + (item.checked ? " is-checked" : "")}>
                       <input
@@ -241,19 +279,39 @@ export function ShoppingListScreen() {
                         aria-expanded={isOpen}
                         onClick={() => setOpenProduct(isOpen ? null : item.productId)}
                       >
-                        <span className="shopping-item-name">{item.name}</span>
+                        <span className="shopping-item-name">
+                          {item.name}
+                          {own && <span className="manual-mark">ręcznie</span>}
+                        </span>
                         <span className="shopping-item-grams">
-                          {number.format(itemGrams(item))}
-                          <span className="meals-unit"> g</span>
+                          {own ? (
+                            item.amount ?? ""
+                          ) : (
+                            <>
+                              {number.format(itemGrams(item))}
+                              <span className="meals-unit"> g</span>
+                            </>
+                          )}
                         </span>
                       </button>
                       {isOpen && (
-                        <p className="shopping-days">
-                          {Object.entries(item.days)
-                            .sort(([a], [b]) => a.localeCompare(b))
-                            .map(([date, grams]) => `${dateLabel(date)}: ${number.format(grams)} g`)
-                            .join(" · ")}
-                        </p>
+                        <div className="shopping-days">
+                          {days.length > 0 && (
+                            <p className="shopping-days-list">
+                              {days.map(([date, grams]) => `${dateLabel(date)}: ${number.format(grams)} g`).join(" · ")}
+                            </p>
+                          )}
+                          {(own || item.addedGrams !== null) && (
+                            <ManualItemControls
+                              key={`${item.addedGrams}-${item.name}-${item.amount}`}
+                              item={item}
+                              busy={action.status === "saving"}
+                              onSaveGrams={(grams) => saveAddedGrams(item, grams)}
+                              onSaveOwn={(name, amount) => saveOwnItem(item, name, amount)}
+                              onRemove={() => removeAddition(item)}
+                            />
+                          )}
+                        </div>
                       )}
                     </li>
                   );

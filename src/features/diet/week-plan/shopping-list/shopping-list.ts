@@ -15,10 +15,19 @@ export type ShoppingListItem = {
   /** Copied from Products when the list was created. */
   name: string;
   category: string;
-  /** Grams per day, keyed by YYYY-MM-DD. */
+  /** Grams per day, keyed by YYYY-MM-DD; empty for items added only by hand. */
   days: Record<string, number>;
   checked: boolean;
+  /** Grams added by hand to a product (Manual items), or null. */
+  addedGrams: number | null;
+  /** Own item (Manual items): amount as typed, or null. */
+  amount: string | null;
 };
+
+/** An own item (Manual items) — a name typed by hand, not a product from Products. */
+export function isOwnItem(item: Pick<ShoppingListItem, "productId">): boolean {
+  return item.productId.startsWith("custom-");
+}
 
 export type ShoppingListSummary = {
   id: string;
@@ -36,7 +45,7 @@ export type ShoppingListSummary = {
 export type ShoppingList = Omit<ShoppingListSummary, "items" | "checked"> & { items: ShoppingListItem[] };
 
 /** Items of a new list, before it is saved. */
-export type NewShoppingListItem = Omit<ShoppingListItem, "checked">;
+export type NewShoppingListItem = Omit<ShoppingListItem, "checked" | "addedGrams" | "amount">;
 
 /** Products of a date range, calculated from the week plans — the preview on the new-list screen. */
 export type RangeItems = {
@@ -72,9 +81,9 @@ export function defaultRange(): { from: string; to: string } {
   return { from: toIsoDate(today), to: toIsoDate(dayDate(weekStartOf(today), 6)) };
 }
 
-/** Grams of all days of an item. */
-export function itemGrams(item: Pick<ShoppingListItem, "days">): number {
-  return Object.values(item.days).reduce((sum, grams) => sum + grams, 0);
+/** Grams of all days of an item, plus grams added by hand. */
+export function itemGrams(item: Pick<ShoppingListItem, "days"> & { addedGrams?: number | null }): number {
+  return Object.values(item.days).reduce((sum, grams) => sum + grams, item.addedGrams ?? 0);
 }
 
 // ---- building a list from the week plans ----

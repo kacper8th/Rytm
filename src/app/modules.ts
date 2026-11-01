@@ -10,6 +10,7 @@ import { WeekStatisticsScreen } from "../features/diet/week-plan/week-statistics
 import { ShoppingListsScreen } from "../features/diet/week-plan/shopping-list/ShoppingListsScreen";
 import { NewShoppingListScreen } from "../features/diet/week-plan/shopping-list/NewShoppingListScreen";
 import { ShoppingListScreen } from "../features/diet/week-plan/shopping-list/ShoppingListScreen";
+import { AddItemScreen } from "../features/diet/week-plan/shopping-list/manual-items/AddItemScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
@@ -53,6 +54,7 @@ export const MODULES: AppModule[] = [
       { path: "shopping-lists", Component: ShoppingListsScreen },
       { path: "shopping-lists/new", Component: NewShoppingListScreen },
       { path: "shopping-lists/:id", Component: ShoppingListScreen },
+      { path: "shopping-lists/:id/add", Component: AddItemScreen },
     ],
   },
   { id: "training", label: "Trening", icon: "🏋️", path: "/training", Screen: TrainingScreen, inBottomBar: true },
