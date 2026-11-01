@@ -48,6 +48,11 @@
   cursor: pointer;
 }
 
+/* "Ukryj kupione" and "Pokaż z magazynu" side by side */
+.shopping-toggle + .shopping-toggle {
+  margin-left: var(--space-5);
+}
+
 .shopping-group {
   margin-bottom: var(--space-4);
 }
@@ -115,6 +120,11 @@
 .shopping-item.is-checked .shopping-item-grams {
   text-decoration: line-through;
   color: var(--color-text-muted);
+}
+
+/* a product that was in the pantry when the list was created (shown with "Pokaż z magazynu") */
+.shopping-item.is-in-pantry .shopping-item-summary {
+  opacity: 0.55;
 }
 
 .shopping-days {

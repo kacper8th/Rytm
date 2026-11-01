@@ -1,4 +1,5 @@
 import { isItemKnown, itemIngredients, type MealPlanItem } from "../../meal-plans/meal-plans";
+import { getPantry } from "../../pantry/pantry";
 import { fromIsoDate, getWeekPlan, request, toIsoDate, weekStartOf, dayDate } from "../week-plan";
 
 /**
@@ -22,7 +23,24 @@ export type ShoppingListItem = {
   addedGrams: number | null;
   /** Own item (Manual items): amount as typed, or null. */
   amount: string | null;
+  /** The product was in the Pantry when the list was created (snapshot); see isInPantry(). */
+  inPantry: boolean;
 };
+
+/**
+ * Treated as in the Pantry — hidden by default, not counted as a thing to buy: marked inPantry and no grams added by hand.
+ * Adding grams by hand means it is to be bought; removing the addition brings the mark back.
+ */
+export function isInPantry(item: Pick<ShoppingListItem, "inPantry"> & { addedGrams?: number | null }): boolean {
+  return item.inPantry && (item.addedGrams ?? null) === null;
+}
+
+/** Items to buy — without pantry products; used for "produkty" and "kupione x/y". */
+export function itemsToBuy<T extends Pick<ShoppingListItem, "inPantry"> & { addedGrams?: number | null }>(
+  items: readonly T[],
+): T[] {
+  return items.filter((item) => !isInPantry(item));
+}
 
 /** An own item (Manual items) — a name typed by hand, not a product from Products. */
 export function isOwnItem(item: Pick<ShoppingListItem, "productId">): boolean {
@@ -37,7 +55,7 @@ export type ShoppingListSummary = {
   /** Days of the range that had a plan. */
   plannedDays: number;
   createdAt: string;
-  /** Number of products and of bought products. */
+  /** Number of products and of bought products, both without pantry products. */
   items: number;
   checked: number;
 };
@@ -88,11 +106,15 @@ export function itemGrams(item: Pick<ShoppingListItem, "days"> & { addedGrams?: 
 
 // ---- building a list from the week plans ----
 
-/** Loads the planned days of the range (one request per week) and sums their products. */
+/**
+ * Loads the planned days of the range (one request per week) and sums their products;
+ * products in the Pantry are marked `inPantry`, whatever the pantry grams.
+ */
 export async function loadRangeItems(from: string, to: string): Promise<RangeItems> {
   const dates = rangeDates(from, to);
   const weeks = [...new Set(dates.map((date) => weekStartOf(fromIsoDate(date))))];
-  const plans = await Promise.all(weeks.map(getWeekPlan));
+  const [plans, pantry] = await Promise.all([Promise.all(weeks.map(getWeekPlan)), getPantry()]);
+  const inPantry = new Set(pantry.map((item) => item.productId));
 
   const inRange = new Set(dates);
   const days: { date: string; items: MealPlanItem[] }[] = [];
@@ -103,12 +125,12 @@ export async function loadRangeItems(from: string, to: string): Promise<RangeIte
     }
   }
 
-  const { items, missing } = buildItems(days);
+  const { items, missing } = buildItems(days, inPantry);
   return { rangeDays: dates.length, plannedDays: days.length, items, missing };
 }
 
 /** Grams per product and day — the same ingredients as on the week screen (meals after the plan's gain steps). */
-function buildItems(days: readonly { date: string; items: readonly MealPlanItem[] }[]) {
+function buildItems(days: readonly { date: string; items: readonly MealPlanItem[] }[], inPantry: ReadonlySet<string>) {
   const byProduct = new Map<string, NewShoppingListItem>();
   let missing = 0;
   for (const { date, items } of days) {
@@ -121,7 +143,13 @@ function buildItems(days: readonly { date: string; items: readonly MealPlanItem[
         if (!(grams > 0)) continue;
         let entry = byProduct.get(product.id);
         if (!entry) {
-          entry = { productId: product.id, name: product.name, category: product.category, days: {} };
+          entry = {
+            productId: product.id,
+            name: product.name,
+            category: product.category,
+            days: {},
+            inPantry: inPantry.has(product.id),
+          };
           byProduct.set(product.id, entry);
         }
         entry.days[date] = (entry.days[date] ?? 0) + grams;

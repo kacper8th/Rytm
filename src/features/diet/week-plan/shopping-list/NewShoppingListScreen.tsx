@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { createShoppingList, defaultRange, loadRangeItems, rangeError, type RangeItems } from "./shopping-list";
+import { createShoppingList, defaultRange, itemsToBuy, loadRangeItems, rangeError, type RangeItems } from "./shopping-list";
 import "../../meals/MealsScreen.css";
 import "../../meal-plans/MealPlansScreen.css";
 import "../WeekPlanScreen.css";
@@ -38,6 +38,8 @@ export function NewShoppingListScreen() {
   }, [from, to, error, reloadCount]);
 
   const range = !error && preview.status === "ready" ? preview.range : null;
+  const toBuy = range ? itemsToBuy(range.items).length : 0;
+  const pantryCount = range ? range.items.length - toBuy : 0;
   const canCreate = range !== null && range.plannedDays > 0 && range.items.length > 0 && save.status !== "saving";
 
   async function create() {
@@ -86,7 +88,8 @@ export function NewShoppingListScreen() {
           )}
           {range && (
             <p className="plans-target">
-              Zaplanowane: {range.plannedDays}/{range.rangeDays} dni · produkty: {range.items.length}
+              Zaplanowane: {range.plannedDays}/{range.rangeDays} dni · produkty: {toBuy}
+              {pantryCount > 0 && <> · w magazynie: {pantryCount}</>}
               {range.missing > 0 && <span className="shopping-missing"> · pominięte (brak w bazie): {range.missing}</span>}
             </p>
           )}

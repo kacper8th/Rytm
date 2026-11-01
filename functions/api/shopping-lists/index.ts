@@ -3,12 +3,15 @@ import { parseListBody, rowToSummary, type ShoppingListRow } from "../../_lib/sh
 
 type SummaryRow = ShoppingListRow & { items: number; checked: number };
 
-/** GET /api/shopping-lists — saved lists, newest first, with the number of products and of bought products. */
+/**
+ * GET /api/shopping-lists — saved lists, newest first, with the number of products and of bought products
+ * (both without pantry products — they are not things to buy; a pantry product with grams added by hand is counted).
+ */
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const { results } = await env.DB.prepare(
     `SELECT l.id, l.date_from, l.date_to, l.planned_days, l.created_at,
             COUNT(i.product_id) AS items, COALESCE(SUM(i.checked), 0) AS checked
-     FROM shopping_lists l LEFT JOIN shopping_list_items i ON i.list_id = l.id
+     FROM shopping_lists l LEFT JOIN shopping_list_items i ON i.list_id = l.id AND NOT (i.in_pantry = 1 AND i.added_grams IS NULL)
      GROUP BY l.id ORDER BY l.created_at DESC`,
   ).all<SummaryRow>();
 
@@ -36,9 +39,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
     ).bind(id, parsed.from, parsed.to, parsed.plannedDays, new Date().toISOString()),
     // All items in one statement: D1 limits the number of queries per request.
     env.DB.prepare(
-      `INSERT INTO shopping_list_items (list_id, product_id, name, category, days)
+      `INSERT INTO shopping_list_items (list_id, product_id, name, category, days, in_pantry)
        SELECT ?, json_extract(value, '$.productId'), json_extract(value, '$.name'),
-              json_extract(value, '$.category'), json_extract(value, '$.days')
+              json_extract(value, '$.category'), json_extract(value, '$.days'), json_extract(value, '$.inPantry')
        FROM json_each(?)`,
     ).bind(id, JSON.stringify(parsed.items)),
   ]);

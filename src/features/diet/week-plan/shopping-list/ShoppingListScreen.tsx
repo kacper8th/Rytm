@@ -7,6 +7,8 @@ import {
   getShoppingList,
   isOwnItem,
   itemGrams,
+  isInPantry,
+  itemsToBuy,
   rangeDates,
   setItemChecked,
   type ShoppingList,
@@ -101,6 +103,8 @@ export function ShoppingListScreen() {
   const [hideChecked, setHideChecked] = useState(readHideChecked);
   const [openProduct, setOpenProduct] = useState<string | null>(null);
   const [dayFilter, setDayFilter] = useState<DayFilter>(null);
+  /** "Pokaż z magazynu" — not remembered; every opening starts with pantry products hidden. */
+  const [showPantry, setShowPantry] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,9 +121,13 @@ export function ShoppingListScreen() {
   const list = load.status === "ready" ? load.list : null;
   const groups = useMemo(() => {
     if (!list) return [];
-    const shown = list.items.filter((i) => (!hideChecked || !i.checked) && isShownForDay(i, dayFilter));
+    const shown = list.items.filter(
+      (i) => (showPantry || !isInPantry(i)) && (!hideChecked || !i.checked) && isShownForDay(i, dayFilter),
+    );
     return groupItems(shown, sort, dayFilter);
-  }, [list, hideChecked, sort, dayFilter]);
+  }, [list, showPantry, hideChecked, sort, dayFilter]);
+
+  const pantryCount = list?.items.filter(isInPantry).length ?? 0;
 
   /** Days some product is needed on, in date order — the options of the filter. */
   const listDays = useMemo(
@@ -202,7 +210,8 @@ export function ShoppingListScreen() {
     writeHideChecked(value);
   }
 
-  const checkedCount = list?.items.filter((i) => i.checked).length ?? 0;
+  const toBuy = list ? itemsToBuy(list.items) : [];
+  const checkedCount = toBuy.filter((i) => i.checked).length;
 
   return (
     <div className="shopping">
@@ -214,7 +223,7 @@ export function ShoppingListScreen() {
         {list && (
           <p className="meals-count">
             Zaplanowane: {list.plannedDays}/{rangeDates(list.from, list.to).length} dni · kupione {checkedCount}/
-            {list.items.length}
+            {toBuy.length}
           </p>
         )}
       </header>
@@ -282,6 +291,13 @@ export function ShoppingListScreen() {
             Ukryj kupione
           </label>
 
+          {pantryCount > 0 && (
+            <label className="shopping-toggle">
+              <input type="checkbox" checked={showPantry} onChange={(e) => setShowPantry(e.target.checked)} />
+              Pokaż z magazynu ({pantryCount})
+            </label>
+          )}
+
           {listDays.length > 0 && (
             <div className="meals-sort">
               <label className="meals-sort-label" htmlFor="shopping-day">
@@ -315,8 +331,14 @@ export function ShoppingListScreen() {
                   const isOpen = openProduct === item.productId;
                   const own = isOwnItem(item);
                   const days = Object.entries(item.days).sort(([a], [b]) => a.localeCompare(b));
+                  const inPantry = isInPantry(item);
                   return (
-                    <li key={item.productId} className={"shopping-item" + (item.checked ? " is-checked" : "")}>
+                    <li
+                      key={item.productId}
+                      className={
+                        "shopping-item" + (item.checked ? " is-checked" : "") + (inPantry ? " is-in-pantry" : "")
+                      }
+                    >
                       <input
                         type="checkbox"
                         className="shopping-check"
@@ -333,6 +355,7 @@ export function ShoppingListScreen() {
                         <span className="shopping-item-name">
                           {item.name}
                           {own && <span className="manual-mark">ręcznie</span>}
+                          {inPantry && <span className="manual-mark">w magazynie</span>}
                         </span>
                         <span className="shopping-item-grams">
                           {own ? (
