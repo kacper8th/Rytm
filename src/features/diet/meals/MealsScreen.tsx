@@ -46,11 +46,13 @@ export function MealsScreen() {
 
   const openMeal = allMeals.find((meal) => meal.id === openId) ?? null;
 
+  /** Steps stay within 0…max, even when clicks come faster than the buttons get disabled. */
   function changeStep(mealId: string, key: GainMacro, change: number) {
-    setSteps((current) => ({
-      ...current,
-      [mealId]: { ...current[mealId], [key]: (current[mealId]?.[key] ?? 0) + change },
-    }));
+    const max = allMeals.find((meal) => meal.id === mealId)?.gains[key]?.max ?? 0;
+    setSteps((current) => {
+      const count = Math.min(Math.max((current[mealId]?.[key] ?? 0) + change, 0), max);
+      return { ...current, [mealId]: { ...current[mealId], [key]: count } };
+    });
   }
 
   return (
