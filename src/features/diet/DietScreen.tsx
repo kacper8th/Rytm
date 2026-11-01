@@ -46,6 +46,14 @@ export function DietScreen() {
             <span className="diet-item-label">Plan tygodnia</span>
           </Link>
         </li>
+        <li>
+          <Link to="/diet/shopping-lists" className="diet-item">
+            <span className="diet-icon" aria-hidden="true">
+              🛒
+            </span>
+            <span className="diet-item-label">Lista zakupów</span>
+          </Link>
+        </li>
       </ul>
     </div>
   );

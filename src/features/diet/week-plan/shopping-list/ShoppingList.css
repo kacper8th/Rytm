@@ -1,0 +1,129 @@
+/* Shopping list reuses the Meals / Meal plans / Week plan classes (meals-*, plans-*, week-*); only its own parts are here. */
+
+.shopping {
+  max-width: 640px;
+}
+
+.shopping-actions {
+  margin-bottom: var(--space-3);
+}
+
+.shopping-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shopping-done {
+  color: var(--color-success);
+}
+
+.shopping-missing {
+  color: var(--color-accent);
+}
+
+/* new list: "od" / "do" */
+.shopping-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.shopping-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.shopping-field .meals-sort-select {
+  padding: 0 var(--space-2);
+}
+
+.shopping-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.shopping-group {
+  margin-bottom: var(--space-4);
+}
+
+.shopping-group-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.shopping-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+/* checkbox + (name, grams) on the first line, days preview under it */
+.shopping-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: 0 var(--space-4);
+}
+
+.shopping-item + .shopping-item {
+  border-top: 1px solid var(--color-border);
+}
+
+.shopping-check {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.shopping-item-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shopping-item-name {
+  font-weight: 600;
+}
+
+.shopping-item-grams {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.shopping-item.is-checked .shopping-item-name,
+.shopping-item.is-checked .shopping-item-grams {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.shopping-days {
+  grid-column: 2;
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.shopping-delete {
+  margin-top: var(--space-5);
+}

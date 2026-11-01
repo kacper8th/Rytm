@@ -8,6 +8,7 @@ import {
   clearWeek,
   copyWeek,
   currentWeekStart,
+  dayDate,
   dayLabel,
   DAYS_IN_WEEK,
   getWeekPlan,
@@ -15,6 +16,7 @@ import {
   saveDay,
   shiftWeek,
   todayIn,
+  toIsoDate,
   weekFromParam,
   weekLabel,
   type WeekPlan,
@@ -293,13 +295,26 @@ function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear, o
           Zaplanowane: {plan.days.length}/{DAYS_IN_WEEK} dni
         </p>
         {plan.days.length > 0 ? (
-          <Link to={`/diet/week-plan/statistics?week=${weekStart}`} className="week-button">
-            Pokaż statystyki
-          </Link>
+          <>
+            <Link to={`/diet/week-plan/statistics?week=${weekStart}`} className="week-button">
+              Pokaż statystyki
+            </Link>
+            <Link
+              to={`/diet/shopping-lists/new?from=${weekStart}&to=${toIsoDate(dayDate(weekStart, DAYS_IN_WEEK - 1))}`}
+              className="week-button"
+            >
+              Lista zakupów
+            </Link>
+          </>
         ) : (
-          <button type="button" className="week-button" disabled>
-            Pokaż statystyki
-          </button>
+          <>
+            <button type="button" className="week-button" disabled>
+              Pokaż statystyki
+            </button>
+            <button type="button" className="week-button" disabled>
+              Lista zakupów
+            </button>
+          </>
         )}
       </div>
 

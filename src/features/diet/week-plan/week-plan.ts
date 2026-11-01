@@ -34,12 +34,12 @@ const MONTH_NAMES = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wr
 
 // ---- dates (local time; a week is identified by its Monday) ----
 
-function toIsoDate(date: Date): string {
+export function toIsoDate(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function fromIsoDate(value: string): Date {
+export function fromIsoDate(value: string): Date {
   const [y, m, d] = value.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
@@ -81,9 +81,15 @@ export function todayIn(weekStart: string): number | null {
 
 /** E.g. "2–8 lis 2026", "30 lis – 6 gru 2026", "29 gru 2025 – 4 sty 2026". */
 export function weekLabel(weekStart: string): string {
-  const first = dayDate(weekStart, 0);
-  const last = dayDate(weekStart, DAYS_IN_WEEK - 1);
+  return dateRangeLabel(weekStart, toIsoDate(dayDate(weekStart, DAYS_IN_WEEK - 1)));
+}
+
+/** A range of dates (YYYY-MM-DD, both included), e.g. "6–9 lis 2026", "30 lis – 2 gru 2026", "6 lis 2026". */
+export function dateRangeLabel(from: string, to: string): string {
+  const first = fromIsoDate(from);
+  const last = fromIsoDate(to);
   const month = (d: Date) => MONTH_NAMES[d.getMonth()];
+  if (from === to) return `${first.getDate()} ${month(first)} ${first.getFullYear()}`;
   if (first.getFullYear() !== last.getFullYear()) {
     return `${first.getDate()} ${month(first)} ${first.getFullYear()} – ${last.getDate()} ${month(last)} ${last.getFullYear()}`;
   }
@@ -95,13 +101,19 @@ export function weekLabel(weekStart: string): string {
 
 /** E.g. "Pon 2.11". */
 export function dayLabel(weekStart: string, day: number): string {
-  const date = dayDate(weekStart, day);
-  return `${DAY_NAMES[day]} ${date.getDate()}.${date.getMonth() + 1}`;
+  return dateLabel(toIsoDate(dayDate(weekStart, day)));
+}
+
+/** A date (YYYY-MM-DD) as e.g. "Pon 2.11". */
+export function dateLabel(value: string): string {
+  const date = fromIsoDate(value);
+  return `${DAY_NAMES[(date.getDay() + 6) % 7]} ${date.getDate()}.${date.getMonth() + 1}`;
 }
 
 // ---- API ----
 
-async function request(url: string, init?: RequestInit): Promise<Response> {
+/** fetch with a Polish error message; also used by other user-data modules (e.g. Shopping list). */
+export async function request(url: string, init?: RequestInit): Promise<Response> {
   let response: Response;
   try {
     response = await fetch(url, init);
