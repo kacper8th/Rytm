@@ -10,14 +10,11 @@ function yearsLabel(years: number): string {
   return `${years} ${lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14) ? "lata" : "lat"}`;
 }
 
-/** Date of birth (with age), sex, height, the latest weight; ✎ edits all but the weight (see WeightSection). */
-export function BasicDataSection({ profile, busy, run, update }: SectionProps) {
-  const [editing, setEditing] = useState(false);
+/** Date of birth (with age), sex, height; edit mode shows them as a form. Weight is in WeightSection. */
+export function BasicDataSection({ profile, editMode, busy, run, update }: SectionProps) {
   const { basic } = profile;
-  const latest = profile.weights[0];
 
   function save(data: Omit<BasicData, "updatedAt">) {
-    setEditing(false);
     run(async () => {
       const saved = await saveBasicData(data);
       update((p) => ({ ...p, basic: saved }));
@@ -26,23 +23,10 @@ export function BasicDataSection({ profile, busy, run, update }: SectionProps) {
 
   return (
     <section className="profile-section">
-      <div className="profile-section-header">
-        <h2 className="profile-section-title">Dane podstawowe</h2>
-        {!editing && (
-          <button
-            type="button"
-            className="profile-icon"
-            disabled={busy}
-            aria-label="Edytuj dane podstawowe"
-            onClick={() => setEditing(true)}
-          >
-            ✎
-          </button>
-        )}
-      </div>
+      <h2 className="profile-section-title">Dane podstawowe</h2>
 
-      {editing ? (
-        <BasicDataForm basic={basic} busy={busy} onSave={save} onCancel={() => setEditing(false)} />
+      {editMode ? (
+        <BasicDataForm basic={basic} busy={busy} onSave={save} />
       ) : (
         <dl className="profile-list profile-facts">
           <div className="profile-row">
@@ -57,14 +41,10 @@ export function BasicDataSection({ profile, busy, run, update }: SectionProps) {
             <dt>Wzrost</dt>
             <dd>{basic ? `${number.format(basic.heightCm)} cm` : "—"}</dd>
           </div>
-          <div className="profile-row">
-            <dt>Waga</dt>
-            <dd>{latest ? `${number.format(latest.weightKg)} kg (${dateLabel(latest.date)})` : "—"}</dd>
-          </div>
         </dl>
       )}
 
-      {basic && !editing && <p className="profile-hint">Zaktualizowano: {dateLabel(basic.updatedAt)}</p>}
+      {basic && !editMode &&<p className="profile-hint">Zaktualizowano: {dateLabel(basic.updatedAt)}</p>}
     </section>
   );
 }
@@ -73,10 +53,10 @@ type FormProps = {
   basic: BasicData | null;
   busy: boolean;
   onSave: (data: Omit<BasicData, "updatedAt">) => void;
-  onCancel: () => void;
 };
 
-function BasicDataForm({ basic, busy, onSave, onCancel }: FormProps) {
+/** Stays open after saving; leaving edit mode drops unsaved changes. */
+function BasicDataForm({ basic, busy, onSave }: FormProps) {
   const [birthDate, setBirthDate] = useState(basic?.birthDate ?? "");
   const [sex, setSex] = useState<Sex | "">(basic?.sex ?? "");
   const [height, setHeight] = useState(basic ? String(basic.heightCm) : "");
@@ -126,9 +106,6 @@ function BasicDataForm({ basic, busy, onSave, onCancel }: FormProps) {
           onClick={() => sex !== "" && onSave({ birthDate, sex, heightCm })}
         >
           Zapisz
-        </button>
-        <button type="button" className="profile-button" onClick={onCancel}>
-          Anuluj
         </button>
       </div>
     </div>

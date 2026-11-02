@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { dateLabel, deleteWeight, number, saveWeight, today } from "./profile";
+import { Link } from "react-router";
+import { dateLabel, number, saveWeight, today } from "./profile";
 import type { SectionProps } from "./ProfileScreen";
 
-/** Weight measurements, newest first: add (one per day — a second one replaces it) and ✕ delete. */
+/** The latest measurement and adding one (one per day — a second one replaces it); the rest is in Weight history. */
 export function WeightSection({ profile, busy, run, update }: SectionProps) {
+  const latest = profile.weights[0];
   const [date, setDate] = useState(today());
   const [weight, setWeight] = useState("");
   const weightKg = Number(weight.replace(",", "."));
@@ -21,17 +23,22 @@ export function WeightSection({ profile, busy, run, update }: SectionProps) {
     });
   }
 
-  function remove(day: string) {
-    if (!window.confirm(`Usunąć pomiar wagi z ${dateLabel(day)}?`)) return;
-    run(async () => {
-      await deleteWeight(day);
-      update((p) => ({ ...p, weights: p.weights.filter((w) => w.date !== day) }));
-    });
-  }
-
   return (
     <section className="profile-section">
       <h2 className="profile-section-title">Waga</h2>
+
+      {latest ? (
+        <dl className="profile-list profile-facts">
+          <div className="profile-row">
+            <dt>Ostatni pomiar</dt>
+            <dd>
+              {number.format(latest.weightKg)} kg ({dateLabel(latest.date)})
+            </dd>
+          </div>
+        </dl>
+      ) : (
+        <p className="profile-empty">Brak pomiarów.</p>
+      )}
 
       <div className="profile-form is-inline">
         <label className="profile-field">
@@ -62,26 +69,10 @@ export function WeightSection({ profile, busy, run, update }: SectionProps) {
         </button>
       </div>
 
-      {profile.weights.length === 0 ? (
-        <p className="profile-empty">Brak pomiarów.</p>
-      ) : (
-        <ul className="profile-list">
-          {profile.weights.map((w) => (
-            <li key={w.date} className="profile-row">
-              <span className="profile-row-main">{dateLabel(w.date)}</span>
-              <span>{number.format(w.weightKg)} kg</span>
-              <button
-                type="button"
-                className="profile-icon"
-                disabled={busy}
-                aria-label={`Usuń pomiar z ${dateLabel(w.date)}`}
-                onClick={() => remove(w.date)}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
+      {latest && (
+        <Link to="/training/profile/weight-history" className="profile-button">
+          Pokaż historię pomiarów
+        </Link>
       )}
     </section>
   );

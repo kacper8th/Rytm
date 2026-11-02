@@ -23,9 +23,12 @@ type Editing =
 /**
  * Health conditions grouped by body area (areas in the order they were added). Areas: add, rename, delete — only an
  * empty one. Conditions: add, edit (including moving to another area), delete. Only the current state is kept.
+ * All changes only in edit mode.
  */
-export function HealthSection({ profile, busy, run, update }: SectionProps) {
-  const [editing, setEditing] = useState<Editing>({ kind: "none" });
+export function HealthSection({ profile, editMode, busy, run, update }: SectionProps) {
+  const [openForm, setEditing] = useState<Editing>({ kind: "none" });
+  /** "Gotowe" closes any open form; it is not reopened when edit mode returns (see ProfileScreen). */
+  const editing: Editing = editMode ? openForm : { kind: "none" };
   const [newArea, setNewArea] = useState("");
   const close = () => setEditing({ kind: "none" });
 
@@ -82,7 +85,9 @@ export function HealthSection({ profile, busy, run, update }: SectionProps) {
     <section className="profile-section">
       <h2 className="profile-section-title">Stan zdrowia</h2>
 
-      {profile.bodyAreas.length === 0 && <p className="profile-empty">Brak obszarów. Dodaj pierwszy poniżej.</p>}
+      {profile.bodyAreas.length === 0 && (
+        <p className="profile-empty">{editMode ? "Brak obszarów. Dodaj pierwszy poniżej." : "Brak wpisów."}</p>
+      )}
 
       {profile.bodyAreas.map((area) => {
         const conditions = profile.healthConditions.filter((c) => c.areaId === area.id);
@@ -93,27 +98,33 @@ export function HealthSection({ profile, busy, run, update }: SectionProps) {
             ) : (
               <div className="profile-section-header">
                 <h3 className="profile-area-title">{area.name}</h3>
-                <button
-                  type="button"
-                  className="profile-icon"
-                  disabled={busy}
-                  aria-label={`Zmień nazwę: ${area.name}`}
-                  onClick={() => setEditing({ kind: "area", id: area.id })}
-                >
-                  ✎
-                </button>
-                <button
-                  type="button"
-                  className="profile-icon"
-                  disabled={busy || conditions.length > 0}
-                  title={conditions.length > 0 ? "Obszar ma wpisy — najpierw je usuń albo przenieś" : undefined}
-                  aria-label={`Usuń obszar: ${area.name}`}
-                  onClick={() => removeArea(area)}
-                >
-                  ✕
-                </button>
+                {editMode && (
+                  <>
+                  <button
+                    type="button"
+                    className="profile-icon"
+                    disabled={busy}
+                    aria-label={`Zmień nazwę: ${area.name}`}
+                    onClick={() => setEditing({ kind: "area", id: area.id })}
+                  >
+                    ✎
+                  </button>
+                  <button
+                    type="button"
+                    className="profile-icon"
+                    disabled={busy || conditions.length > 0}
+                    title={conditions.length > 0 ? "Obszar ma wpisy — najpierw je usuń albo przenieś" : undefined}
+                    aria-label={`Usuń obszar: ${area.name}`}
+                    onClick={() => removeArea(area)}
+                  >
+                    ✕
+                  </button>
+                  </>
+                )}
               </div>
             )}
+
+            {conditions.length === 0 && !editMode && <p className="profile-empty">Brak wpisów.</p>}
 
             {conditions.length > 0 && (
               <ul className="profile-list">
@@ -138,24 +149,28 @@ export function HealthSection({ profile, busy, run, update }: SectionProps) {
                           </span>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        className="profile-icon"
-                        disabled={busy}
-                        aria-label={`Edytuj: ${condition.description}`}
-                        onClick={() => setEditing({ kind: "condition", id: condition.id })}
-                      >
-                        ✎
-                      </button>
-                      <button
-                        type="button"
-                        className="profile-icon"
-                        disabled={busy}
-                        aria-label={`Usuń: ${condition.description}`}
-                        onClick={() => removeCondition(condition)}
-                      >
-                        ✕
-                      </button>
+                      {editMode && (
+                        <>
+                        <button
+                          type="button"
+                          className="profile-icon"
+                          disabled={busy}
+                          aria-label={`Edytuj: ${condition.description}`}
+                          onClick={() => setEditing({ kind: "condition", id: condition.id })}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          type="button"
+                          className="profile-icon"
+                          disabled={busy}
+                          aria-label={`Usuń: ${condition.description}`}
+                          onClick={() => removeCondition(condition)}
+                        >
+                          ✕
+                        </button>
+                        </>
+                      )}
                     </li>
                   ),
                 )}
@@ -171,37 +186,46 @@ export function HealthSection({ profile, busy, run, update }: SectionProps) {
                 onCancel={close}
               />
             ) : (
-              <div className="profile-actions">
-                <button
-                  type="button"
-                  className="profile-button"
-                  disabled={busy}
-                  onClick={() => setEditing({ kind: "new-condition", areaId: area.id })}
-                >
-                  Dodaj wpis
-                </button>
-              </div>
+              editMode && (
+                <div className="profile-actions">
+                  <button
+                    type="button"
+                    className="profile-button"
+                    disabled={busy}
+                    onClick={() => setEditing({ kind: "new-condition", areaId: area.id })}
+                  >
+                    Dodaj wpis
+                  </button>
+                </div>
+              )
             )}
           </div>
         );
       })}
 
-      <div className="profile-form is-inline">
-        <label className="profile-field is-grow">
-          <span>Nowy obszar</span>
-          <input
-            type="text"
-            className="profile-input"
-            maxLength={100}
-            value={newArea}
-            onChange={(e) => setNewArea(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && newArea.trim() && !busy && addArea()}
-          />
-        </label>
-        <button type="button" className="profile-button is-primary" disabled={busy || !newArea.trim()} onClick={addArea}>
-          Dodaj obszar
-        </button>
-      </div>
+      {editMode && (
+        <div className="profile-form is-inline">
+          <label className="profile-field is-grow">
+            <span>Nowy obszar</span>
+            <input
+              type="text"
+              className="profile-input"
+              maxLength={100}
+              value={newArea}
+              onChange={(e) => setNewArea(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && newArea.trim() && !busy && addArea()}
+            />
+          </label>
+          <button
+            type="button"
+            className="profile-button is-primary"
+            disabled={busy || !newArea.trim()}
+            onClick={addArea}
+          >
+            Dodaj obszar
+          </button>
+        </div>
+      )}
     </section>
   );
 }

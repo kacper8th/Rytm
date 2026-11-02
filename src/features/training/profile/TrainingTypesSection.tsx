@@ -2,8 +2,8 @@ import { useState } from "react";
 import { addTrainingType, deleteTrainingType } from "./profile";
 import type { SectionProps } from "./ProfileScreen";
 
-/** Training types as free text: add and ✕ delete. */
-export function TrainingTypesSection({ profile, busy, run, update }: SectionProps) {
+/** Training types as free text; in edit mode add and ✕ delete. */
+export function TrainingTypesSection({ profile, editMode, busy, run, update }: SectionProps) {
   const [name, setName] = useState("");
   const trimmed = name.trim();
 
@@ -34,36 +34,40 @@ export function TrainingTypesSection({ profile, busy, run, update }: SectionProp
           {profile.trainingTypes.map((type) => (
             <li key={type.id} className="profile-row">
               <span className="profile-row-main">{type.name}</span>
-              <button
-                type="button"
-                className="profile-icon"
-                disabled={busy}
-                aria-label={`Usuń: ${type.name}`}
-                onClick={() => remove(type.id, type.name)}
-              >
-                ✕
-              </button>
+              {editMode && (
+                <button
+                  type="button"
+                  className="profile-icon"
+                  disabled={busy}
+                  aria-label={`Usuń: ${type.name}`}
+                  onClick={() => remove(type.id, type.name)}
+                >
+                  ✕
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
 
-      <div className="profile-form is-inline">
-        <label className="profile-field is-grow">
-          <span>Nowy rodzaj</span>
-          <input
-            type="text"
-            className="profile-input"
-            maxLength={100}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && trimmed && !busy && add()}
-          />
-        </label>
-        <button type="button" className="profile-button is-primary" disabled={busy || !trimmed} onClick={add}>
-          Dodaj
-        </button>
-      </div>
+      {editMode && (
+        <div className="profile-form is-inline">
+          <label className="profile-field is-grow">
+            <span>Nowy rodzaj</span>
+            <input
+              type="text"
+              className="profile-input"
+              maxLength={100}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && trimmed && !busy && add()}
+            />
+          </label>
+          <button type="button" className="profile-button is-primary" disabled={busy || !trimmed} onClick={add}>
+            Dodaj
+          </button>
+        </div>
+      )}
     </section>
   );
 }

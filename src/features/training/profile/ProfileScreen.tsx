@@ -15,6 +15,8 @@ type Action = { status: "idle" } | { status: "saving" } | { status: "error"; mes
 /** What every section gets: the profile, a way to save a change and to put the saved result into the profile. */
 export type SectionProps = {
   profile: Profile;
+  /** Controls of basic data, training types and health are shown only in edit mode; weight ignores it. */
+  editMode: boolean;
   busy: boolean;
   /** Runs a save; shows "Zapisywanie…" and, on error, a retry. */
   run: (task: () => Promise<void>) => void;
@@ -25,6 +27,14 @@ export function ProfileScreen() {
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [reloadCount, setReloadCount] = useState(0);
   const [action, setAction] = useState<Action>({ status: "idle" });
+  const [editMode, setEditMode] = useState(false);
+  /** Changes on every entry into edit mode, so the sections start with closed forms and empty fields. */
+  const [editCount, setEditCount] = useState(0);
+
+  function startEditing() {
+    setEditCount((n) => n + 1);
+    setEditMode(true);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +66,9 @@ export function ProfileScreen() {
   }
 
   const section =
-    load.status === "ready" ? { profile: load.profile, busy: action.status === "saving", run, update } : null;
+    load.status === "ready"
+      ? { profile: load.profile, editMode, busy: action.status === "saving", run, update }
+      : null;
 
   return (
     <div className="profile">
@@ -64,7 +76,19 @@ export function ProfileScreen() {
         <Link to="/training" className="profile-back">
           ← Trening
         </Link>
-        <h1 className="profile-title">Profil</h1>
+        <div className="profile-title-row">
+          <h1 className="profile-title">Profil</h1>
+          {section &&
+            (editMode ? (
+              <button type="button" className="profile-button is-primary" onClick={() => setEditMode(false)}>
+                Gotowe
+              </button>
+            ) : (
+              <button type="button" className="profile-icon" aria-label="Edytuj profil" onClick={startEditing}>
+                ✎
+              </button>
+            ))}
+        </div>
       </header>
 
       {action.status === "saving" && <p className="profile-status">Zapisywanie…</p>}
@@ -93,10 +117,10 @@ export function ProfileScreen() {
 
       {section && (
         <>
-          <BasicDataSection {...section} />
+          <BasicDataSection key={`basic-${editCount}`} {...section} />
           <WeightSection {...section} />
-          <TrainingTypesSection {...section} />
-          <HealthSection {...section} />
+          <TrainingTypesSection key={`types-${editCount}`} {...section} />
+          <HealthSection key={`health-${editCount}`} {...section} />
         </>
       )}
     </div>

@@ -15,6 +15,7 @@ import { PantryScreen } from "../features/diet/pantry/PantryScreen";
 import { AddPantryItemScreen } from "../features/diet/pantry/AddPantryItemScreen";
 import { TrainingScreen } from "../features/training/TrainingScreen";
 import { ProfileScreen } from "../features/training/profile/ProfileScreen";
+import { WeightHistoryScreen } from "../features/training/profile/weight-history/WeightHistoryScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
 
 /**
@@ -69,7 +70,10 @@ export const MODULES: AppModule[] = [
     path: "/training",
     Screen: TrainingScreen,
     inBottomBar: true,
-    subRoutes: [{ path: "profile", Component: ProfileScreen }],
+    subRoutes: [
+      { path: "profile", Component: ProfileScreen },
+      { path: "profile/weight-history", Component: WeightHistoryScreen },
+    ],
   },
   { id: "tasks", label: "Zadania", icon: "📋", path: "/tasks", Screen: TasksScreen, inBottomBar: true },
 ];
