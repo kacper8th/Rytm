@@ -14,6 +14,14 @@ export function TrainingScreen() {
             <span className="training-item-label">Profil</span>
           </Link>
         </li>
+        <li>
+          <Link to="/training/exercises" className="training-item">
+            <span className="training-icon" aria-hidden="true">
+              💪
+            </span>
+            <span className="training-item-label">Ćwiczenia</span>
+          </Link>
+        </li>
       </ul>
     </div>
   );
