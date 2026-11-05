@@ -6,6 +6,7 @@ import { ProductsScreen } from "../features/diet/products/ProductsScreen";
 import { MealsScreen } from "../features/diet/meals/MealsScreen";
 import { MealPlansScreen } from "../features/diet/meal-plans/MealPlansScreen";
 import { WeekPlanScreen } from "../features/diet/week-plan/WeekPlanScreen";
+import { TodayMenuScreen } from "../features/diet/week-plan/today-menu/TodayMenuScreen";
 import { WeekStatisticsScreen } from "../features/diet/week-plan/week-statistics/WeekStatisticsScreen";
 import { ShoppingListsScreen } from "../features/diet/week-plan/shopping-list/ShoppingListsScreen";
 import { NewShoppingListScreen } from "../features/diet/week-plan/shopping-list/NewShoppingListScreen";
@@ -50,6 +51,7 @@ export const MODULES: AppModule[] = [
     Screen: DietScreen,
     inBottomBar: true,
     subRoutes: [
+      { path: "today", Component: TodayMenuScreen },
       { path: "products", Component: ProductsScreen },
       { path: "meals", Component: MealsScreen },
       { path: "meal-plans", Component: MealPlansScreen },

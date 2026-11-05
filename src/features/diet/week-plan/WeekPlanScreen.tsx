@@ -15,8 +15,10 @@ import {
   listWeeks,
   saveDay,
   shiftWeek,
+  sourceLabel,
   todayIn,
   toIsoDate,
+  variantOf,
   weekFromParam,
   weekLabel,
   type WeekPlan,
@@ -30,15 +32,6 @@ type Load = { status: "loading" } | { status: "error"; message: string } | { sta
 
 /** Saving or clearing a day; on error the user can retry the same action. */
 type Action = { status: "idle" } | { status: "saving" } | { status: "error"; message: string; retry: () => void };
-
-function variantOf(source: WeekPlanSource | null) {
-  return source ? getMealPlanVariants().find((v) => v.id === source.variantId) : undefined;
-}
-
-function sourceLabel(source: WeekPlanSource | null): string | null {
-  if (!source) return null;
-  return `${variantOf(source)?.name ?? source.variantId} · nr ${source.planNumber}`;
-}
 
 export function WeekPlanScreen() {
   // The shown week lives in the URL (?week=), so returning from Week statistics opens the same week.

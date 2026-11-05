@@ -10,6 +10,14 @@ export function DietScreen() {
       <h1 className="diet-title">Dieta</h1>
       <ul className="diet-list">
         <li>
+          <Link to="/diet/today" className="diet-item">
+            <span className="diet-icon" aria-hidden="true">
+              🍽️
+            </span>
+            <span className="diet-item-label">Pokaż dzisiejsze menu</span>
+          </Link>
+        </li>
+        <li>
           <Link to="/diet/products" className="diet-item">
             <span className="diet-icon" aria-hidden="true">
               🥕

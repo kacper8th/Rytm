@@ -1,5 +1,5 @@
 import { request } from "../../../shared/api";
-import type { MealPlanItem } from "../meal-plans/meal-plans";
+import { getMealPlanVariants, type MealPlanItem } from "../meal-plans/meal-plans";
 
 /**
  * Week plan — user data saved on the server (Cloudflare D1 via /api/week-plans).
@@ -32,6 +32,19 @@ export const DAYS_IN_WEEK = 7;
 
 const DAY_NAMES = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 const MONTH_NAMES = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
+
+// ---- source of a day ----
+
+/** The variant a day was copied from; undefined when there is no source or the variant no longer exists. */
+export function variantOf(source: WeekPlanSource | null) {
+  return source ? getMealPlanVariants().find((v) => v.id === source.variantId) : undefined;
+}
+
+/** E.g. "2800 kcal · nr 12"; null when the day has no source. */
+export function sourceLabel(source: WeekPlanSource | null): string | null {
+  if (!source) return null;
+  return `${variantOf(source)?.name ?? source.variantId} · nr ${source.planNumber}`;
+}
 
 // ---- dates (local time; a week is identified by its Monday) ----
 
