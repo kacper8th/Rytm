@@ -19,10 +19,10 @@ import { ExercisesScreen } from "../features/training/exercises/ExercisesScreen"
 import { ProfileScreen } from "../features/training/profile/ProfileScreen";
 import { WeightHistoryScreen } from "../features/training/profile/weight-history/WeightHistoryScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
-import { CurrentTasksScreen } from "../features/tasks/CurrentTasksScreen";
-import { RecurringTasksScreen } from "../features/tasks/RecurringTasksScreen";
-import { AddRecurringTaskScreen } from "../features/tasks/AddRecurringTaskScreen";
-import { EditRecurringTaskScreen } from "../features/tasks/EditRecurringTaskScreen";
+import { CurrentTasksScreen } from "../features/tasks/current/CurrentTasksScreen";
+import { RecurringTasksScreen } from "../features/tasks/recurring/RecurringTasksScreen";
+import { AddRecurringTaskScreen } from "../features/tasks/recurring/AddRecurringTaskScreen";
+import { EditRecurringTaskScreen } from "../features/tasks/recurring/EditRecurringTaskScreen";
 
 /**
  * Module registry — the single place where top-level modules are added.

@@ -10,7 +10,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WEEKDAY_SHORT = ["pn", "wt", "śr", "czw", "pt", "sob", "nd"];
 const WEEKDAY_ACCUSATIVE = ["poniedziałek", "wtorek", "środę", "czwartek", "piątek", "sobotę", "niedzielę"];
-/** środa, sobota, niedziela — "ostatnią", the others "ostatni". */
+/** Days whose Polish name is feminine (Wednesday, Saturday, Sunday) — they take the feminine form of "last". */
 const FEMININE_DAYS = new Set([2, 5, 6]);
 
 /** Whole days from `a` to `b` (both YYYY-MM-DD); not affected by daylight saving time. */
@@ -69,7 +69,7 @@ export function overdueDates(task: Task, done: ReadonlySet<string>, today: strin
   return occurrencesBetween(task, task.startDate, addDays(today, -1)).filter((date) => !done.has(date));
 }
 
-/** The repeat rule in Polish, e.g. "co 3 dni", "pn, czw · co 2 tyg.", "w 2. wtorek miesiąca". */
+/** The repeat rule as a short Polish label for the interface: the interval, the chosen days or the day of the month. */
 export function ruleLabel(task: Task): string {
   switch (task.repeatType) {
     case "days":
