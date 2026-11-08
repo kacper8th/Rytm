@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { dateRangeLabel } from "../week-plan";
+import { dateRangeLabel } from "../../../../shared/dates";
 import { listShoppingLists, type ShoppingListSummary } from "./shopping-list";
 import "../../meals/MealsScreen.css";
 import "../WeekPlanScreen.css";

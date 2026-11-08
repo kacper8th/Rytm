@@ -2,15 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { itemsTotals } from "../../meal-plans/meal-plans";
 import { PlanCardSummary, PlanItems } from "../../meal-plans/PlanItems";
-import {
-  currentWeekStart,
-  dayLabel,
-  getWeekPlan,
-  sourceLabel,
-  todayIn,
-  variantOf,
-  type WeekPlanDay,
-} from "../week-plan";
+import { currentWeekStart, dayLabel, todayIn } from "../../../../shared/dates";
+import { getWeekPlan, sourceLabel, variantOf, type WeekPlanDay } from "../week-plan";
 import "../../meals/MealsScreen.css";
 import "../WeekPlanScreen.css";
 import "./TodayMenuScreen.css";

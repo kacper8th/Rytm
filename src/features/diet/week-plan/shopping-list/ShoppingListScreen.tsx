@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { number } from "../../meals/MealDetails";
-import { dateLabel, dateRangeLabel } from "../week-plan";
+import { dateLabel, dateRangeLabel } from "../../../../shared/dates";
 import {
   deleteShoppingList,
   getShoppingList,

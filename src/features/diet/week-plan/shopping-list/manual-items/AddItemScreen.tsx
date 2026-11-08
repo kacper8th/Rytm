@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { getProducts, productMatches, type Product } from "../../../products/products";
-import { dateRangeLabel } from "../../week-plan";
+import { dateRangeLabel } from "../../../../../shared/dates";
 import { getShoppingList, type ShoppingList } from "../shopping-list";
 import { addOwnItem, addProduct } from "./manual-items";
 import "../../../meals/MealsScreen.css";

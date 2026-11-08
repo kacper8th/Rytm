@@ -19,6 +19,10 @@ import { ExercisesScreen } from "../features/training/exercises/ExercisesScreen"
 import { ProfileScreen } from "../features/training/profile/ProfileScreen";
 import { WeightHistoryScreen } from "../features/training/profile/weight-history/WeightHistoryScreen";
 import { TasksScreen } from "../features/tasks/TasksScreen";
+import { CurrentTasksScreen } from "../features/tasks/CurrentTasksScreen";
+import { RecurringTasksScreen } from "../features/tasks/RecurringTasksScreen";
+import { AddRecurringTaskScreen } from "../features/tasks/AddRecurringTaskScreen";
+import { EditRecurringTaskScreen } from "../features/tasks/EditRecurringTaskScreen";
 
 /**
  * Module registry — the single place where top-level modules are added.
@@ -79,7 +83,20 @@ export const MODULES: AppModule[] = [
       { path: "exercises", Component: ExercisesScreen },
     ],
   },
-  { id: "tasks", label: "Zadania", icon: "📋", path: "/tasks", Screen: TasksScreen, inBottomBar: true },
+  {
+    id: "tasks",
+    label: "Zadania",
+    icon: "📋",
+    path: "/tasks",
+    Screen: TasksScreen,
+    inBottomBar: true,
+    subRoutes: [
+      { path: "current", Component: CurrentTasksScreen },
+      { path: "recurring", Component: RecurringTasksScreen },
+      { path: "recurring/add", Component: AddRecurringTaskScreen },
+      { path: "recurring/:id/edit", Component: EditRecurringTaskScreen },
+    ],
+  },
 ];
 
 /** "Więcej" entry in the phone's bottom bar — lists modules that are not in the bar. */

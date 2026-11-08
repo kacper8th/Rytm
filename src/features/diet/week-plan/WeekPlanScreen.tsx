@@ -4,23 +4,25 @@ import { number } from "../meals/MealDetails";
 import { getMealPlanVariants, itemsTotals, planTotals, TARGET_TOLERANCE, type MealPlan } from "../meal-plans/meal-plans";
 import { PlanCardSummary, PlanItems } from "../meal-plans/PlanItems";
 import {
-  clearDay,
-  clearWeek,
-  copyWeek,
   currentWeekStart,
   dayDate,
   dayLabel,
   DAYS_IN_WEEK,
+  shiftWeek,
+  todayIn,
+  toIsoDate,
+  weekFromParam,
+  weekLabel,
+} from "../../../shared/dates";
+import {
+  clearDay,
+  clearWeek,
+  copyWeek,
   getWeekPlan,
   listWeeks,
   saveDay,
-  shiftWeek,
   sourceLabel,
-  todayIn,
-  toIsoDate,
   variantOf,
-  weekFromParam,
-  weekLabel,
   type WeekPlan,
   type WeekPlanDay,
   type WeekPlanSource,

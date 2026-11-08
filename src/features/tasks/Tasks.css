@@ -1,0 +1,355 @@
+/* Tasks — main screen (panels), week view, recurring tasks list, add form. */
+
+/* main screen: panels */
+.tasks-hub-title {
+  margin: 0 0 var(--space-4);
+}
+
+.tasks-hub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tasks-hub-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.tasks-hub-item.is-disabled {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.tasks-hub-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.tasks-hub-note {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+}
+
+@media (min-width: 900px) {
+  .tasks-hub {
+    max-width: 400px;
+  }
+
+  a.tasks-hub-item:hover {
+    background: var(--color-surface-raised);
+  }
+}
+
+.tasks-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.tasks-back {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.tasks-title {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.tasks-count {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* buttons */
+.tasks-button {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tasks-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.tasks-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tasks-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.tasks-arrow {
+  min-width: 44px;
+}
+
+.tasks-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  text-decoration: none;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tasks-icon-button:hover:not(:disabled) {
+  color: var(--color-accent);
+}
+
+/* week navigation */
+.tasks-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.tasks-nav-label {
+  min-width: 11em;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* status and empty texts */
+.tasks-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.tasks-status.is-error {
+  color: var(--color-accent);
+}
+
+.tasks-empty {
+  color: var(--color-text-muted);
+}
+
+.tasks-empty a {
+  color: var(--color-accent);
+}
+
+/* sections: overdue, days, done */
+.tasks-section {
+  margin-bottom: var(--space-4);
+}
+
+.tasks-section-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.tasks-section.is-today .tasks-section-title {
+  color: var(--color-text);
+}
+
+.tasks-section.is-overdue .tasks-section-title {
+  color: var(--color-accent);
+}
+
+.tasks-section.is-done {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* rows */
+.tasks-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tasks-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tasks-section.is-overdue .tasks-row {
+  border-color: var(--color-accent);
+}
+
+.tasks-row-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.tasks-check input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-success);
+}
+
+.tasks-row-title {
+  overflow-wrap: anywhere;
+}
+
+.tasks-row-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.tasks-row-main .tasks-row-note {
+  text-align: left;
+}
+
+.tasks-row.is-done .tasks-row-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* add form */
+.tasks-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 480px;
+}
+
+.tasks-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.tasks-field legend {
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+
+.tasks-field input[type="text"],
+.tasks-field input[type="date"],
+.tasks-field input[type="number"],
+.tasks-field select {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-md);
+}
+
+.tasks-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.tasks-field-row .tasks-field {
+  flex: 1;
+  min-width: 140px;
+}
+
+.tasks-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+}
+
+.tasks-weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tasks-weekday {
+  min-width: 44px;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-align: center;
+  cursor: pointer;
+}
+
+.tasks-weekday input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tasks-weekday.is-on {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.tasks-weekday:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
