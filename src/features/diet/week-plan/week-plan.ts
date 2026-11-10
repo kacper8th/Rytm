@@ -1,5 +1,5 @@
 import { request } from "../../../shared/api";
-import { getMealPlanVariants, type MealPlanItem } from "../meal-plans/meal-plans";
+import { getMealPlanVariants, planName, type MealPlanItem, type PlanNames } from "../meal-plans/meal-plans";
 
 /**
  * Week plan — user data saved on the server (Cloudflare D1 via /api/week-plans).
@@ -35,10 +35,10 @@ export function variantOf(source: WeekPlanSource | null) {
   return source ? getMealPlanVariants().find((v) => v.id === source.variantId) : undefined;
 }
 
-/** E.g. "2800 kcal · nr 12"; null when the day has no source. */
-export function sourceLabel(source: WeekPlanSource | null): string | null {
+/** The current name of the source plan (not saved with the day, so a rename shows everywhere); null without a source. */
+export function sourceLabel(source: WeekPlanSource | null, names: PlanNames | null): string | null {
   if (!source) return null;
-  return `${variantOf(source)?.name ?? source.variantId} · nr ${source.planNumber}`;
+  return `Jadłospis: ${planName(names, source.variantId, source.planNumber)}`;
 }
 
 // ---- API ----

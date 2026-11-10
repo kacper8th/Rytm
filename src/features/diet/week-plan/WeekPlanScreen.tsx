@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { number } from "../meals/MealDetails";
-import { getMealPlanVariants, itemsTotals, planTotals, TARGET_TOLERANCE, type MealPlan } from "../meal-plans/meal-plans";
+import {
+  getMealPlanVariants,
+  itemsTotals,
+  planName,
+  planTotals,
+  TARGET_TOLERANCE,
+  type MealPlan,
+  type PlanNames,
+} from "../meal-plans/meal-plans";
 import { PlanCardSummary, PlanItems } from "../meal-plans/PlanItems";
+import { usePlanNames } from "../meal-plans/usePlanNames";
 import {
   currentWeekStart,
   dayDate,
@@ -45,6 +54,7 @@ export function WeekPlanScreen() {
   const [pickingDay, setPickingDay] = useState<number | null>(null);
   const [copying, setCopying] = useState(false);
   const [action, setAction] = useState<Action>({ status: "idle" });
+  const { names } = usePlanNames();
 
   useEffect(() => {
     let cancelled = false;
@@ -219,6 +229,7 @@ export function WeekPlanScreen() {
           <PlanPicker
             title={dayLabel(weekStart, pickingDay)}
             current={load.plan.days.find((d) => d.day === pickingDay)?.source ?? null}
+            names={names}
             busy={busy}
             onPick={(variantId, plan) => pick(pickingDay, variantId, plan)}
             onCancel={() => {
@@ -230,6 +241,7 @@ export function WeekPlanScreen() {
           <WeekDays
             weekStart={weekStart}
             plan={load.plan}
+            names={names}
             openDay={openDay}
             busy={busy}
             onToggle={(day) => setOpenDay(openDay === day ? null : day)}
@@ -246,6 +258,7 @@ export function WeekPlanScreen() {
 type WeekDaysProps = {
   weekStart: string;
   plan: WeekPlan;
+  names: PlanNames | null;
   openDay: number | null;
   busy: boolean;
   onToggle: (day: number) => void;
@@ -256,7 +269,7 @@ type WeekDaysProps = {
 };
 
 /** The 7 day cards; a planned day expands (phone) or opens in the panel (PC). */
-function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear, onCopyWeek, onClearWeek }: WeekDaysProps) {
+function WeekDays({ weekStart, plan, names, openDay, busy, onToggle, onPick, onClear, onCopyWeek, onClearWeek }: WeekDaysProps) {
   const byDay = new Map(plan.days.map((d) => [d.day, d]));
   const today = todayIn(weekStart);
   const open = openDay !== null ? byDay.get(openDay) : undefined;
@@ -342,7 +355,7 @@ function WeekDays({ weekStart, plan, openDay, busy, onToggle, onPick, onClear, o
             }
 
             const isOpen = openDay === day;
-            const source = sourceLabel(saved.source);
+            const source = sourceLabel(saved.source, names);
             return (
               <li
                 key={day}
@@ -393,6 +406,7 @@ type PlanPickerProps = {
   title: string;
   /** Source of the day being changed — its variant is preselected and its plan marked. */
   current: WeekPlanSource | null;
+  names: PlanNames | null;
   busy: boolean;
   onPick: (variantId: string, plan: MealPlan) => void;
   onCancel: () => void;
@@ -402,7 +416,7 @@ type PlanPickerProps = {
  * Meal plan list for one day. Tapping a plan only opens it (phone: under the card, PC: panel);
  * the day is saved with "Wybierz ten jadłospis" in the opened plan.
  */
-function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps) {
+function PlanPicker({ title, current, names, busy, onPick, onCancel }: PlanPickerProps) {
   const variants = getMealPlanVariants();
   const [variantId, setVariantId] = useState(variantOf(current)?.id ?? variants[0]?.id ?? "");
   const [openNumber, setOpenNumber] = useState<number | null>(current?.planNumber ?? null);
@@ -482,7 +496,7 @@ function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps)
                       <PlanCardSummary
                         title={
                           <>
-                            Jadłospis {plan.number}
+                            {planName(names, variant.id, plan.number)}
                             {isCurrent(plan) && <span className="week-source">obecnie wybrany</span>}
                           </>
                         }
@@ -502,7 +516,7 @@ function PlanPicker({ title, current, busy, onPick, onCancel }: PlanPickerProps)
             <aside className="meals-panel">
               {openPlan ? (
                 <div className="meals-details">
-                  <h2 className="meals-panel-title">Jadłospis {openPlan.number}</h2>
+                  <h2 className="meals-panel-title">{planName(names, variant.id, openPlan.number)}</h2>
                   {details(openPlan)}
                 </div>
               ) : (

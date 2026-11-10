@@ -6,6 +6,82 @@
   color: var(--color-text-muted);
 }
 
+/* plan name: rename button and form above the items of the day */
+.plans-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.meals-details > .plans-actions {
+  margin-bottom: var(--space-3);
+}
+
+.plans-button {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.plans-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.plans-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plans-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.plans-name-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.plans-name-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.plans-input {
+  min-height: 40px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-md);
+}
+
+.plans-status {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.plans-status.is-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-accent);
+}
+
 /* difference from the target kcal on a plan card */
 .plans-diff {
   margin-left: auto;

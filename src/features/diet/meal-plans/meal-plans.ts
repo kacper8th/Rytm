@@ -1,3 +1,4 @@
+import { request } from "../../../shared/api";
 import { getMeals, mealIngredients, mealTotals, type GainSteps, type Meal, type MealIngredient } from "../meals/meals";
 import { getProducts, type NutrientKey, type Product } from "../products/products";
 import { MEAL_PLAN_VARIANTS } from "./meal-plans.data";
@@ -46,6 +47,54 @@ export type MealPlanVariant = {
 export function getMealPlanVariants(): readonly MealPlanVariant[] {
   return MEAL_PLAN_VARIANTS;
 }
+
+// ---- names (user data on the server, /api/meal-plan-names) ----
+
+/** Saved names by "variantId/planNumber"; a plan without an entry has the default name. */
+export type PlanNames = ReadonlyMap<string, string>;
+
+/** Must match NAME_MAX in functions/_lib/meal-plan-names.ts. */
+export const PLAN_NAME_MAX = 100;
+
+const nameKey = (variantId: string, planNumber: number) => `${variantId}/${planNumber}`;
+
+/** The name of a plan that was never renamed. */
+export function defaultPlanName(planNumber: number): string {
+  return `Jadłospis ${planNumber}`;
+}
+
+/** The plan's name: the saved one, or the default while names are not loaded (null) or the plan was never renamed. */
+export function planName(names: PlanNames | null, variantId: string, planNumber: number): string {
+  return names?.get(nameKey(variantId, planNumber)) ?? defaultPlanName(planNumber);
+}
+
+/** Names loaded in this app session — shared by every screen, updated on rename. */
+let cachedNames: PlanNames | null = null;
+
+export function cachedPlanNames(): PlanNames | null {
+  return cachedNames;
+}
+
+export async function getPlanNames(): Promise<PlanNames> {
+  const response = await request("/api/meal-plan-names");
+  const { names } = (await response.json()) as { names: { variantId: string; planNumber: number; name: string }[] };
+  cachedNames = new Map(names.map((n) => [nameKey(n.variantId, n.planNumber), n.name]));
+  return cachedNames;
+}
+
+/** Saves the plan's name (1–PLAN_NAME_MAX characters after trimming) and returns all names with it. */
+export async function renamePlan(names: PlanNames, variantId: string, planNumber: number, name: string): Promise<PlanNames> {
+  const response = await request(`/api/meal-plan-names/${encodeURIComponent(variantId)}/${planNumber}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  const saved = (await response.json()) as { name: string };
+  cachedNames = new Map(names).set(nameKey(variantId, planNumber), saved.name);
+  return cachedNames;
+}
+
+// ---- items ----
 
 let mealsById: Map<string, Meal> | null = null;
 let productsById: Map<string, Product> | null = null;
