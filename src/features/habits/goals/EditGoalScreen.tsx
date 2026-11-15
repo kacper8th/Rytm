@@ -53,7 +53,7 @@ export function EditGoalScreen() {
           </button>
         </div>
       )}
-      {load.status === "missing" && <p className="habits-empty">Nie znaleziono celu — mógł zostać usunięty.</p>}
+      {load.status === "missing" && <p className="habits-empty">Nie znaleziono celu - mógł zostać usunięty.</p>}
 
       {load.status === "ready" && (
         <>

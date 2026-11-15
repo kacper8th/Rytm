@@ -194,7 +194,6 @@ export function GoalsScreen() {
                 <EntryControls
                   habit={goal}
                   entries={dayEntries}
-                  showDates={false}
                   disabled={busy}
                   onAdd={(amount) => add(goal, amount)}
                   onDelete={remove}

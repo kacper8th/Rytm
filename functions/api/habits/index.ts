@@ -34,6 +34,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
     ...habit,
     id: crypto.randomUUID(),
     runStart: habit.kind === "counter" ? habit.startDate : null,
+    runCount: habit.kind === "counter" ? 1 : 0,
     createdAt: new Date().toISOString(),
   };
   const insert = env.DB.prepare(

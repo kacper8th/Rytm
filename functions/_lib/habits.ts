@@ -13,7 +13,7 @@ export type Habit = {
   id: string;
   kind: HabitKind;
   name: string;
-  /** YYYY-MM-DD — goal / limit: no entries before it (and the rule's first occurrence); counter: start of the first run. */
+  /** YYYY-MM-DD, may be in the future — goal / limit: no entries before it (and the rule's first occurrence); counter: start of the first run. */
   startDate: string;
   /** Goal: by repeat rule or by period; null for limits (always a period) and counters. */
   schedule: "rule" | "period" | null;
@@ -28,6 +28,8 @@ export type Habit = {
   buttonValues: number[];
   /** Counter: start date of the current run. */
   runStart: string | null;
+  /** Counter: number of runs (more than 1 = the last restart can be undone). */
+  runCount: number;
   createdAt: string;
 };
 
@@ -49,12 +51,13 @@ export type HabitRow = {
   button_values: string | null;
   created_at: string;
   run_start: string | null;
+  run_count: number;
 };
 
-/** SELECT of habits with the start of the counter's current run; read by rowToHabit(). */
+/** SELECT of habits with the start of the counter's current run and its number of runs; read by rowToHabit(). */
 export const HABIT_SELECT = `SELECT h.id, h.kind, h.name, h.start_date, h.schedule, h.repeat_type, h.interval, h.weekdays,
     h.month_day, h.week_of_month, h.weekday, h.period, h.target, h.unit, h.button_values, h.created_at,
-    r.start_date AS run_start
+    r.start_date AS run_start, (SELECT COUNT(*) FROM counter_runs c WHERE c.habit_id = h.id) AS run_count
   FROM habits h LEFT JOIN counter_runs r ON r.habit_id = h.id AND r.end_date IS NULL`;
 
 export function rowToHabit(row: HabitRow): Habit {
@@ -70,6 +73,7 @@ export function rowToHabit(row: HabitRow): Habit {
     unit: row.unit,
     buttonValues: row.button_values ? row.button_values.split(",").map(Number) : [],
     runStart: row.run_start,
+    runCount: row.run_count,
     createdAt: row.created_at,
   };
 }
@@ -109,8 +113,8 @@ export const isPastOrToday = (v: unknown): v is string => isIsoDate(v) && v <= l
 const PERIODS: readonly Period[] = ["day", "week", "month"];
 const isPeriod = (v: unknown): v is Period => PERIODS.includes(v as Period);
 
-/** Values of a new habit, as saved (without id, runStart, createdAt). */
-export type NewHabit = Omit<Habit, "id" | "runStart" | "createdAt">;
+/** Values of a new habit, as saved (without id, runStart, runCount, createdAt). */
+export type NewHabit = Omit<Habit, "id" | "runStart" | "runCount" | "createdAt">;
 
 function parseName(body: Record<string, unknown>): string | null {
   const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -143,7 +147,7 @@ export function parseNewHabit(body: unknown, savedKind?: HabitKind): NewHabit | 
   if (kind !== "goal" && kind !== "limit" && kind !== "counter") return "`kind` must be goal, limit or counter.";
   const name = parseName(body);
   if (!name) return "`name` must have 1–200 characters.";
-  if (!isPastOrToday(body.startDate)) return "`startDate` must be a date YYYY-MM-DD, not in the future.";
+  if (!isIsoDate(body.startDate)) return "`startDate` must be a date YYYY-MM-DD.";
   const base: NewHabit = {
     kind: kind as HabitKind,
     name,
@@ -207,6 +211,30 @@ export function parseNewEntry(body: unknown): { date: string; amount: number } |
   if (!isPastOrToday(body.date)) return "`date` must be a date YYYY-MM-DD, not in the future.";
   if (!isAmount(body.amount)) return "`amount` must be a number > 0, at most 1 000 000.";
   return { date: body.date, amount: body.amount };
+}
+
+/** Settings of the Habits card on Home, shared by all devices. */
+export type HomeRange = "day" | "days" | "week" | "month";
+export type Settings = { homeRange: HomeRange; homeDays: number; homeShowAll: boolean };
+export type SettingsRow = { home_range: HomeRange; home_days: number; home_show_all: number };
+
+/** Used while no settings are saved. */
+export const DEFAULT_SETTINGS: Settings = { homeRange: "month", homeDays: 3, homeShowAll: false };
+
+export function rowToSettings(row: SettingsRow | null): Settings {
+  return row ? { homeRange: row.home_range, homeDays: row.home_days, homeShowAll: row.home_show_all === 1 } : DEFAULT_SETTINGS;
+}
+
+const HOME_RANGES: readonly HomeRange[] = ["day", "days", "week", "month"];
+
+/** Checks the body of PUT /api/habits/settings (all three fields). Returns the settings or an error. */
+export function parseSettings(body: unknown): Settings | string {
+  if (!isRecord(body)) return "Body must be an object.";
+  if (!HOME_RANGES.includes(body.homeRange as HomeRange)) return "`homeRange` must be day, days, week or month.";
+  const days = body.homeDays;
+  if (typeof days !== "number" || !Number.isInteger(days) || days < 2 || days > 31) return "`homeDays` must be 2–31.";
+  if (typeof body.homeShowAll !== "boolean") return "`homeShowAll` must be true or false.";
+  return { homeRange: body.homeRange as HomeRange, homeDays: days, homeShowAll: body.homeShowAll };
 }
 
 /** The date of a body { date } (restart), or null when it is missing, invalid or in the future. */

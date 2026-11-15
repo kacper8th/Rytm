@@ -9,9 +9,10 @@ export function HabitsScreen() {
       <PanelList
         panels={[
           { icon: "🎯", label: "Cele", to: "/habits/goals" },
-          { icon: "🚫", label: "Limity" },
-          { icon: "⏱️", label: "Liczniki" },
-          { icon: "📊", label: "Statystyki" },
+          { icon: "🚫", label: "Limity", to: "/habits/limits" },
+          { icon: "⏱️", label: "Liczniki", to: "/habits/counters" },
+          { icon: "📊", label: "Statystyki", to: "/habits/statistics" },
+          { icon: "⚙️", label: "Ustawienia", to: "/habits/settings" },
         ]}
       />
     </div>

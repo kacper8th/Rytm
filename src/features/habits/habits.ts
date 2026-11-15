@@ -31,13 +31,22 @@ export type Habit = {
   buttonValues: number[];
   /** Counter: start date of the current run. */
   runStart: string | null;
+  /** Counter: number of runs (more than 1 = the last restart can be undone). */
+  runCount: number;
   createdAt: string;
 };
 
-export type NewHabit = Omit<Habit, "id" | "runStart" | "createdAt">;
+export type NewHabit = Omit<Habit, "id" | "runStart" | "runCount" | "createdAt">;
 
 /** One click on a quick button or one amount typed by hand. */
 export type Entry = { id: string; habitId: string; date: string; amount: number; createdAt: string };
+
+/**
+ * Settings of the Habits card on Home, shared by all devices: the range of days it covers (today, today + N-1 days,
+ * this week Mon–Sun, this calendar month) and whether it shows all habits regardless of the range.
+ */
+export type HomeRange = "day" | "days" | "week" | "month";
+export type Settings = { homeRange: HomeRange; homeDays: number; homeShowAll: boolean };
 
 /** A counter run; the current run has no end date. */
 export type Run = { id: string; habitId: string; startDate: string; endDate: string | null };
@@ -89,4 +98,31 @@ export async function addEntry(habitId: string, date: string, amount: number): P
 
 export async function deleteEntry(entryId: string): Promise<void> {
   await request(`/api/habits/entries/${encodeURIComponent(entryId)}`, { method: "DELETE" });
+}
+
+/** Ends the counter's current run on `date` and starts a new run on it. Returns the new run. */
+export async function restartCounter(habitId: string, date: string): Promise<Run> {
+  const response = await request(`${habitUrl(habitId)}/restart`, json("POST", { date }));
+  return (await response.json()) as Run;
+}
+
+/** Undoes the last restart: the current run is deleted and the previous one continues. */
+export async function undoRestart(habitId: string): Promise<void> {
+  await request(`${habitUrl(habitId)}/restart`, { method: "DELETE" });
+}
+
+export async function getSettings(): Promise<Settings> {
+  const response = await request("/api/habits/settings");
+  return (await response.json()) as Settings;
+}
+
+export async function saveSettings(settings: Settings): Promise<Settings> {
+  const response = await request("/api/habits/settings", json("PUT", settings));
+  return (await response.json()) as Settings;
+}
+
+/** All runs of a counter, the newest first. */
+export async function getRuns(habitId: string): Promise<Run[]> {
+  const response = await request(`${habitUrl(habitId)}/runs`);
+  return (await response.json()) as Run[];
 }

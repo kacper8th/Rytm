@@ -15,6 +15,8 @@ import "./Habits.css";
 type Kind = "goal" | "limit";
 
 const NAME_ERROR = "Wpisz nazwę.";
+/** Unit used when the field is left empty. */
+const DEFAULT_UNIT = "razy";
 const MAX_BUTTONS = 8;
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
@@ -35,19 +37,18 @@ type Form = {
 };
 
 /** The form as a habit, or the first error to show (Polish). */
-function validate(kind: Kind, form: Form, today: string): NewHabit | string {
+function validate(kind: Kind, form: Form): NewHabit | string {
   const name = form.name.trim();
   if (!name) return NAME_ERROR;
   if (!form.startDate) return "Wybierz datę startu.";
-  if (form.startDate > today) return "Data startu nie może być w przyszłości.";
 
   const target = parseAmount(form.target);
   if (kind === "goal" ? !(target > 0) : !(target >= 0)) {
     return kind === "goal" ? "Cel: liczba większa od 0." : "Limit: liczba 0 lub większa.";
   }
   if (target > 1_000_000) return "Liczba za duża (najwyżej 1 000 000).";
-  const unit = form.unit.trim();
-  if (!unit || unit.length > 20) return "Jednostka: 1–20 znaków.";
+  const unit = form.unit.trim() || DEFAULT_UNIT;
+  if (unit.length > 20) return "Jednostka: najwyżej 20 znaków.";
 
   const parts = form.buttons.split(/[\s;]+/).filter(Boolean);
   const values = parts.map(parseAmount);
@@ -101,7 +102,7 @@ export function HabitForm({
   const [saveError, setSaveError] = useState<string | null>(null);
   const set = (changes: Partial<Form>) => setForm((prev) => ({ ...prev, ...changes }));
 
-  const result = validate(kind, form, today);
+  const result = validate(kind, form);
   const error = typeof result === "string" ? result : null;
   // Errors are not shown before the user types a name; the save button stays disabled.
   const shownError = form.name === "" && !initial ? null : error;
@@ -141,7 +142,7 @@ export function HabitForm({
 
       <label className="habits-field">
         <span>Data startu</span>
-        <input type="date" value={form.startDate} max={today} onChange={(e) => set({ startDate: e.target.value })} />
+        <input type="date" value={form.startDate} onChange={(e) => set({ startDate: e.target.value })} />
       </label>
 
       {kind === "goal" && (
@@ -149,11 +150,11 @@ export function HabitForm({
           <legend>Kiedy</legend>
           <label className="habits-choice">
             <input type="radio" name="schedule" checked={form.schedule === "rule"} onChange={() => set({ schedule: "rule" })} />
-            W wybrane dni — cel na każdy dzień
+            W wybrane dni - cel na każdy dzień
           </label>
           <label className="habits-choice">
             <input type="radio" name="schedule" checked={form.schedule === "period"} onChange={() => set({ schedule: "period" })} />
-            W okresie — suma w dniu, tygodniu lub miesiącu
+            W okresie - suma w dniu, tygodniu lub miesiącu
           </label>
         </fieldset>
       )}
@@ -168,7 +169,7 @@ export function HabitForm({
         </label>
         <label className="habits-field">
           <span>Jednostka</span>
-          <input type="text" value={form.unit} maxLength={20} placeholder="np. ml, razy" onChange={(e) => set({ unit: e.target.value })} />
+          <input type="text" value={form.unit} maxLength={20} placeholder="razy (domyślnie)" onChange={(e) => set({ unit: e.target.value })} />
         </label>
       </div>
 

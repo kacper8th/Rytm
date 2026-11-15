@@ -1,6 +1,6 @@
-import { addDays, dateLabel, fromIsoDate, toIsoDate, weekLabel, weekStartOf } from "../../shared/dates";
+import { addDays, dateLabel, daysBetween, fromIsoDate, toIsoDate, weekLabel, weekStartOf } from "../../shared/dates";
 import { occursOn } from "../../shared/recurrence";
-import { goalRule, type Entry, type Habit, type Period } from "./habits";
+import { goalRule, type Entry, type Habit, type Period, type Settings } from "./habits";
 
 /**
  * Periods, sums and states of goals and limits — shared by the Habits sub-modules.
@@ -78,6 +78,57 @@ export const sumOf = (entries: readonly Entry[]) => entries.reduce((sum, e) => s
 export function goalState(sum: number, target: number, range: Range, today: string): "done" | "open" | "missed" {
   if (sum >= target) return "done";
   return range.to >= today ? "open" : "missed";
+}
+
+/** State of a limit in its period: exceeded as soon as the sum is over the limit, otherwise within it. */
+export function limitState(sum: number, limit: number): "within" | "exceeded" {
+  return sum > limit ? "exceeded" : "within";
+}
+
+/** Entries in the order they were added (the last one is what "undo last" deletes). */
+export const byAdded = (a: Entry, b: Entry) => a.createdAt.localeCompare(b.createdAt);
+
+/** The days the Home card covers: from today to the end of the range (today, today + N-1 days, this week, this month). */
+export function homeRange(settings: Settings, today: string): Range {
+  switch (settings.homeRange) {
+    case "day":
+      return { from: today, to: today };
+    case "days":
+      return { from: today, to: addDays(today, settings.homeDays - 1) };
+    case "week":
+      return { from: today, to: periodRange("week", today).to };
+    case "month":
+      return { from: today, to: periodRange("month", today).to };
+  }
+}
+
+/**
+ * Whether a goal or limit summed over `period` belongs to the Home range: daily ones always; weekly ones for
+ * this week, this month or 7+ days; monthly ones for this month or 28+ days.
+ */
+export function periodInHome(period: Period, settings: Settings): boolean {
+  if (period === "day") return true;
+  const days = settings.homeRange === "days" ? settings.homeDays : 0;
+  if (period === "week") return settings.homeRange === "week" || settings.homeRange === "month" || days >= 7;
+  return settings.homeRange === "month" || days >= 28;
+}
+
+/** The first day from `from` to `to` (both included) the goal is shown on, or null. */
+export function firstDayShown(habit: Habit, range: Range): string | null {
+  for (let date = range.from; date <= range.to; date = addDays(date, 1)) {
+    if (showsOn(habit, date)) return date;
+  }
+  return null;
+}
+
+/** A number of days in Polish, e.g. "1 dzień", "12 dni". */
+export const daysLabel = (days: number) => `${days} ${days === 1 ? "dzień" : "dni"}`;
+
+/** Days of a counter run from `start` to `end`, or when it starts if `start` is still ahead: "12 dni", "start jutro", "start za 3 dni". */
+export function runLabel(start: string, end: string): string {
+  const days = daysBetween(start, end);
+  if (days >= 0) return daysLabel(days);
+  return days === -1 ? "start jutro" : `start za ${-days} dni`;
 }
 
 /** An amount in Polish notation: up to 2 decimals, decimal comma, e.g. "0,5", "2000". */

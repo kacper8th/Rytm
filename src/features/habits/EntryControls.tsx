@@ -1,7 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { dateLabel } from "../../shared/dates";
+import { dateLabel, toIsoDate } from "../../shared/dates";
 import type { Entry, Habit } from "./habits";
 import { formatAmount, parseAmount } from "./periods";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * When an entry counts and when it was added, e.g. "Sob 14.11, 18:36"; an entry added on another day (a past day
+ * filled in later) also shows when it was added: "Sob 14.11 (dodano 15.11, 09:05)".
+ */
+function entryWhen(entry: Entry): string {
+  const added = new Date(entry.createdAt);
+  const time = `${pad(added.getHours())}:${pad(added.getMinutes())}`;
+  if (toIsoDate(added) === entry.date) return `${dateLabel(entry.date)}, ${time}`;
+  return `${dateLabel(entry.date)} (dodano ${added.getDate()}.${added.getMonth() + 1}, ${time})`;
+}
 
 /**
  * Adding and correcting the entries of one goal or limit — shared by Goals and Limits.
@@ -10,7 +23,6 @@ import { formatAmount, parseAmount } from "./periods";
 export function EntryControls({
   habit,
   entries,
-  showDates,
   disabled,
   onAdd,
   onDelete,
@@ -18,8 +30,6 @@ export function EntryControls({
   habit: Habit;
   /** Entries the controls correct (the shown day or period), in the order added. */
   entries: readonly Entry[];
-  /** Show the date of each entry in the list (entries of a period span several days). */
-  showDates: boolean;
   disabled: boolean;
   onAdd: (amount: number) => void;
   onDelete: (entry: Entry) => void;
@@ -48,7 +58,7 @@ export function EntryControls({
             className="habits-button"
             disabled={disabled}
             onClick={() => onAdd(value)}
-            aria-label={`Dodaj ${formatAmount(value)} ${unit} — ${habit.name}`}
+            aria-label={`Dodaj ${formatAmount(value)} ${unit} - ${habit.name}`}
           >
             +{formatAmount(value)}
           </button>
@@ -62,7 +72,7 @@ export function EntryControls({
           placeholder={`Ilość (${unit})`}
           value={amountText}
           onChange={(e) => setAmountText(e.target.value)}
-          aria-label={`Ilość do dodania — ${habit.name}`}
+          aria-label={`Ilość do dodania - ${habit.name}`}
         />
         <button type="submit" className="habits-button" disabled={disabled || !amountValid}>
           Dodaj
@@ -72,7 +82,7 @@ export function EntryControls({
           className="habits-button"
           disabled={disabled || !last}
           onClick={() => last && onDelete(last)}
-          aria-label={`Cofnij ostatni wpis — ${habit.name}`}
+          aria-label={`Cofnij ostatni wpis - ${habit.name}`}
         >
           Cofnij
         </button>
@@ -89,7 +99,7 @@ export function EntryControls({
                 <li key={entry.id} className="habits-entries-row">
                   <span>
                     {formatAmount(entry.amount)} {unit}
-                    {showDates && <span className="habits-row-note"> · {dateLabel(entry.date)}</span>}
+                    <span className="habits-row-note"> · {entryWhen(entry)}</span>
                   </span>
                   <button
                     type="button"

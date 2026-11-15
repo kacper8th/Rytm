@@ -28,6 +28,15 @@ import { GoalsScreen } from "../features/habits/goals/GoalsScreen";
 import { GoalsListScreen } from "../features/habits/goals/GoalsListScreen";
 import { AddGoalScreen } from "../features/habits/goals/AddGoalScreen";
 import { EditGoalScreen } from "../features/habits/goals/EditGoalScreen";
+import { LimitsScreen } from "../features/habits/limits/LimitsScreen";
+import { LimitsListScreen } from "../features/habits/limits/LimitsListScreen";
+import { AddLimitScreen } from "../features/habits/limits/AddLimitScreen";
+import { EditLimitScreen } from "../features/habits/limits/EditLimitScreen";
+import { CountersScreen } from "../features/habits/counters/CountersScreen";
+import { AddCounterScreen } from "../features/habits/counters/AddCounterScreen";
+import { EditCounterScreen } from "../features/habits/counters/EditCounterScreen";
+import { StatisticsScreen } from "../features/habits/statistics/StatisticsScreen";
+import { SettingsScreen as HabitSettingsScreen } from "../features/habits/settings/SettingsScreen";
 
 /**
  * Module registry — the single place where top-level modules are added.
@@ -114,6 +123,15 @@ export const MODULES: AppModule[] = [
       { path: "goals/list", Component: GoalsListScreen },
       { path: "goals/add", Component: AddGoalScreen },
       { path: "goals/:id/edit", Component: EditGoalScreen },
+      { path: "limits", Component: LimitsScreen },
+      { path: "limits/list", Component: LimitsListScreen },
+      { path: "limits/add", Component: AddLimitScreen },
+      { path: "limits/:id/edit", Component: EditLimitScreen },
+      { path: "counters", Component: CountersScreen },
+      { path: "counters/add", Component: AddCounterScreen },
+      { path: "counters/:id/edit", Component: EditCounterScreen },
+      { path: "statistics", Component: StatisticsScreen },
+      { path: "settings", Component: HabitSettingsScreen },
     ],
   },
 ];
