@@ -18,6 +18,24 @@ export function fromIsoDate(value: string): Date {
   return new Date(y, m - 1, d);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole days from `a` to `b` (both YYYY-MM-DD); negative when `b` is earlier; not affected by daylight saving time. */
+export function daysBetween(a: string, b: string): number {
+  const utc = (v: string) => {
+    const [y, m, d] = v.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((utc(b) - utc(a)) / DAY_MS);
+}
+
+/** The date `days` days after `date` (YYYY-MM-DD); negative = earlier. */
+export function addDays(date: string, days: number): string {
+  const d = fromIsoDate(date);
+  d.setDate(d.getDate() + days);
+  return toIsoDate(d);
+}
+
 /** Date of a day of the week (0 = Monday). */
 export function dayDate(weekStart: string, day: number): Date {
   const date = fromIsoDate(weekStart);

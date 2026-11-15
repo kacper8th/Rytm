@@ -1,5 +1,5 @@
 import { badRequest, notFound, type Env } from "../../../../_lib/http";
-import { isId, isIsoDate } from "../../../../_lib/tasks";
+import { isId, isIsoDate } from "../../../../_lib/validation";
 
 /**
  * PUT /api/tasks/:id/completions/:date — marks the occurrence on that date as done (again = no change).

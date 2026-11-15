@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { dateLabel, dayDate, DAYS_IN_WEEK, shiftWeek, toIsoDate, weekFromParam, weekLabel } from "../../../shared/dates";
-import { occursOn, overdueDates } from "../recurrence";
+import { occursOn, overdueDates } from "../../../shared/recurrence";
 import { getTasks, markDone, unmarkDone, type Completion, type Task, type TasksData } from "../tasks";
 import "../Tasks.css";
 

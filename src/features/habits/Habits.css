@@ -1,0 +1,357 @@
+/* Styles of Habits and its sub-modules. */
+
+.habits-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.habits-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.habits-back {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.habits-title {
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.habits-header .habits-title {
+  margin-bottom: 0;
+}
+
+.habits-count {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* buttons */
+.habits-button {
+  display: inline-block;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.habits-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.habits-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.habits-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.habits-arrow {
+  min-width: 44px;
+}
+
+.habits-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  text-decoration: none;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.habits-icon-button:hover:not(:disabled) {
+  color: var(--color-accent);
+}
+
+.habits-link-button {
+  padding: var(--space-1) 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/* day navigation */
+.habits-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.habits-nav-label {
+  min-width: 9em;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* status and empty texts */
+.habits-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.habits-status.is-error {
+  color: var(--color-accent);
+}
+
+.habits-empty {
+  color: var(--color-text-muted);
+}
+
+.habits-empty a {
+  color: var(--color-accent);
+}
+
+/* list rows (lists of goals / limits / counters) */
+.habits-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.habits-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.habits-row-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.habits-row-title {
+  overflow-wrap: anywhere;
+}
+
+.habits-row-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* cards of the day / period screens */
+.habits-cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.habits-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.habits-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.habits-card-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.habits-card-state {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.habits-card.is-done .habits-card-state {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.habits-card.is-missed .habits-card-state,
+.habits-card.is-exceeded .habits-card-state {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.habits-progress-text {
+  font-size: var(--font-size-sm);
+}
+
+.habits-progress {
+  height: 6px;
+  background: var(--color-surface-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.habits-progress-bar {
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.habits-card.is-done .habits-progress-bar {
+  background: var(--color-success);
+}
+
+/* entry controls */
+.habits-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.habits-entry-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.habits-entry-buttons .habits-button {
+  min-width: 56px;
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.habits-entry-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.habits-entry-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.habits-entry-form .habits-button {
+  min-height: 44px;
+}
+
+.habits-entries-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.habits-entries-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+/* add / edit form */
+.habits-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 480px;
+}
+
+.habits-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.habits-field legend {
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+
+.habits-field input[type="text"],
+.habits-field input[type="date"],
+.habits-field select {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-md);
+}
+
+.habits-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.habits-field-row .habits-field {
+  flex: 1;
+  min-width: 140px;
+}
+
+.habits-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+}

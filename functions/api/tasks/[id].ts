@@ -1,5 +1,6 @@
 import { badRequest, json, notFound, type Env } from "../../_lib/http";
-import { isId, parseNewTask, type Task } from "../../_lib/tasks";
+import { parseNewTask, type Task } from "../../_lib/tasks";
+import { isId } from "../../_lib/validation";
 
 /**
  * PUT /api/tasks/:id — body as in POST /api/tasks: replaces the task's name, start date and repeat rule.

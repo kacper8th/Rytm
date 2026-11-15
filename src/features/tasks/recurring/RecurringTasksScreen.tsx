@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { dateLabel } from "../../../shared/dates";
-import { ruleLabel } from "../recurrence";
+import { ruleLabel } from "../../../shared/recurrence";
 import { deleteTask, getTasks, type Task } from "../tasks";
 import "../Tasks.css";
 

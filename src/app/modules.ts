@@ -23,6 +23,11 @@ import { CurrentTasksScreen } from "../features/tasks/current/CurrentTasksScreen
 import { RecurringTasksScreen } from "../features/tasks/recurring/RecurringTasksScreen";
 import { AddRecurringTaskScreen } from "../features/tasks/recurring/AddRecurringTaskScreen";
 import { EditRecurringTaskScreen } from "../features/tasks/recurring/EditRecurringTaskScreen";
+import { HabitsScreen } from "../features/habits/HabitsScreen";
+import { GoalsScreen } from "../features/habits/goals/GoalsScreen";
+import { GoalsListScreen } from "../features/habits/goals/GoalsListScreen";
+import { AddGoalScreen } from "../features/habits/goals/AddGoalScreen";
+import { EditGoalScreen } from "../features/habits/goals/EditGoalScreen";
 
 /**
  * Module registry — the single place where top-level modules are added.
@@ -95,6 +100,20 @@ export const MODULES: AppModule[] = [
       { path: "recurring", Component: RecurringTasksScreen },
       { path: "recurring/add", Component: AddRecurringTaskScreen },
       { path: "recurring/:id/edit", Component: EditRecurringTaskScreen },
+    ],
+  },
+  {
+    id: "habits",
+    label: "Nawyki",
+    icon: "✔️",
+    path: "/habits",
+    Screen: HabitsScreen,
+    inBottomBar: false,
+    subRoutes: [
+      { path: "goals", Component: GoalsScreen },
+      { path: "goals/list", Component: GoalsListScreen },
+      { path: "goals/add", Component: AddGoalScreen },
+      { path: "goals/:id/edit", Component: EditGoalScreen },
     ],
   },
 ];
