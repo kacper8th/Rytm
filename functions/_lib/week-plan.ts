@@ -3,17 +3,8 @@
  * The server checks only the shape of a day; whether meal / product ids exist is checked on display.
  */
 
-/** Must match MEAL_TYPES in src/features/diet/meal-plans/meal-plans.ts. */
-const MEAL_TYPE_MAX: Record<string, number> = {
-  "śniadanie": 1,
-  obiad: 1,
-  podwieczorek: 1,
-  "przekąska": 2,
-  kolacja: 1,
-};
-
-/** Must match GAIN_MACROS in src/features/diet/meals/meals.ts. */
-const GAIN_MACROS = ["protein", "carbs", "fat"];
+import { GAIN_MACROS, MEAL_TYPE_MAX } from "./diet-rules";
+import { isId, isRecord } from "./validation";
 
 export type WeekPlanItem =
   | { mealType: string; kind: "meal"; mealId: string; steps: Record<string, number> }
@@ -66,8 +57,6 @@ export function rowToDay(row: WeekPlanDayRow): WeekPlanDay {
   };
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
-const isId = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 200;
 
 /** Checks the body of PUT …/days/:day. Returns the clean day or an error message. */
 export function parseDayBody(body: unknown): { items: WeekPlanItem[]; source: WeekPlanSource | null } | string {

@@ -118,9 +118,7 @@ export async function checkProductsFile(text: string): Promise<ImportCheck> {
           ])
         : [],
     },
-    save: async (mode) => {
-      await saveProducts(products, mode);
-      await loadDietBase(true);
-    },
+    save: (mode) => saveProducts(products, mode),
+    afterSave: () => loadDietBase(true),
   };
 }

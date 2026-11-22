@@ -1,4 +1,5 @@
 import { request } from "../../../shared/api";
+import type { ImportResult } from "../../../shared/ui/ImportButton";
 import { dietBase, setPlanNameInBase } from "../diet-base";
 import { findMeal, mealIngredients, mealTotals, type GainSteps, type Meal, type MealIngredient } from "../meals/meals";
 import { findProduct, type NutrientKey, type Product } from "../products/products";
@@ -8,7 +9,7 @@ import { findProduct, type NutrientKey, type Product } from "../products/product
  * Items refer to meals and products by id. See documentation: Modules/Diet/Meal plans.
  */
 
-/** Meal types in display order, with the max count per plan. Must match MEAL_TYPE_MAX in functions/_lib/diet-base.ts and functions/_lib/week-plan.ts. */
+/** Meal types in display order, with the max count per plan. Must match MEAL_TYPE_MAX in functions/_lib/diet-rules.ts. */
 export const MEAL_TYPES = [
   { key: "śniadanie", label: "Śniadanie", max: 1 },
   { key: "obiad", label: "Obiad", max: 1 },
@@ -152,8 +153,8 @@ export async function saveMealPlans(
   variant: Omit<MealPlanVariant, "plans">,
   plans: readonly MealPlan[],
   mode: "add" | "replace",
-): Promise<void> {
-  await request("/api/diet-base/meal-plans", {
+): Promise<ImportResult> {
+  const response = await request("/api/diet-base/meal-plans", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -162,4 +163,16 @@ export async function saveMealPlans(
       mode,
     }),
   });
+  return (await response.json()) as ImportResult;
+}
+
+// ---- selected variant ----
+
+/** The variant chosen on the Meal plans screen, kept for the app session (also set by an import). */
+let selectedVariantId: string | null = null;
+
+export const rememberedVariantId = () => selectedVariantId;
+
+export function rememberVariant(variantId: string) {
+  selectedVariantId = variantId;
 }

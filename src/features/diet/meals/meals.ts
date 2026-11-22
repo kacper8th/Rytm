@@ -1,4 +1,5 @@
 import { request } from "../../../shared/api";
+import type { ImportResult } from "../../../shared/ui/ImportButton";
 import { dietBase } from "../diet-base";
 import { findProduct, NUTRIENTS, nutrientAmount, type NutrientKey, type Product } from "../products/products";
 
@@ -12,6 +13,7 @@ export const MEAL_TAGS = ["śniadanie", "obiad", "kolacja", "przekąska"] as con
 /** A suggestion when the meal fits, not a restriction. */
 export type MealTag = (typeof MEAL_TAGS)[number];
 
+/** Keys must match GAIN_MACROS in functions/_lib/diet-rules.ts. */
 export const GAIN_MACROS = [
   { key: "protein", label: "Białko" },
   { key: "carbs", label: "Węglowodany" },
@@ -107,10 +109,11 @@ export function isRecipeLink(recipe: string): boolean {
  * Import: saves the meals (a known id replaces the meal, a new id adds it; "replace" also deletes the meals not in the list)
  * — PUT /api/diet-base/meals.
  */
-export async function saveMeals(meals: readonly Meal[], mode: "add" | "replace"): Promise<void> {
-  await request("/api/diet-base/meals", {
+export async function saveMeals(meals: readonly Meal[], mode: "add" | "replace"): Promise<ImportResult> {
+  const response = await request("/api/diet-base/meals", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items: meals, mode }),
   });
+  return (await response.json()) as ImportResult;
 }

@@ -1,7 +1,16 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { number } from "../meals/MealDetails";
-import { getMealPlanVariants, planTotals, PLAN_NAME_MAX, renamePlan, TARGET_TOLERANCE, type MealPlan } from "./meal-plans";
+import {
+  getMealPlanVariants,
+  planTotals,
+  PLAN_NAME_MAX,
+  rememberedVariantId,
+  rememberVariant,
+  renamePlan,
+  TARGET_TOLERANCE,
+  type MealPlan,
+} from "./meal-plans";
 import { PlanCardSummary, PlanItems } from "./PlanItems";
 import { exportMealPlanVariant } from "./meal-plans-export";
 import { downloadFile } from "../../../shared/csv";
@@ -17,7 +26,7 @@ type Saving = { status: "idle" } | { status: "saving" } | { status: "error"; mes
 
 export function MealPlansScreen() {
   const variants = getMealPlanVariants();
-  const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
+  const [variantId, setVariantId] = useState(rememberedVariantId() ?? variants[0]?.id ?? "");
   const [openId, setOpenId] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [saving, setSaving] = useState<Saving>({ status: "idle" });
@@ -32,7 +41,7 @@ export function MealPlansScreen() {
     return (
       <div className="meal-plans page-wide">
         <PlansHeader count={0}>
-          <ImportButton check={checkMealPlansFile} />
+          <ImportButton id="meal-plans" check={checkMealPlansFile} />
         </PlansHeader>
         <p className="meals-empty">Brak jadłospisów.</p>
       </div>
@@ -89,7 +98,7 @@ export function MealPlansScreen() {
             downloadFile(`jadlospisy-${slugify(variant.name)}-${toIsoDate(new Date())}.csv`, exportMealPlanVariant(variant))
           }
         />
-        <ImportButton check={checkMealPlansFile} />
+        <ImportButton id="meal-plans" check={checkMealPlansFile} />
       </PlansHeader>
 
       <div className="meals-sort">
@@ -102,6 +111,7 @@ export function MealPlansScreen() {
           value={variant.id}
           onChange={(e) => {
             setVariantId(e.target.value);
+            rememberVariant(e.target.value);
             open(null);
           }}
         >

@@ -4,6 +4,9 @@ import "./ImportButton.css";
 /** "add" adds and updates; "replace" also deletes what is not in the file. */
 export type ImportMode = "add" | "replace";
 
+/** What a save changed, as counted by the server. */
+export type ImportResult = { added: number; updated: number; deleted: number };
+
 /** Result of checking a file: errors stop the import; warnings are only shown. */
 export type ImportCheck = {
   errors: string[];
@@ -21,8 +24,20 @@ export type ImportCheck = {
     affected: string[];
   } | null;
   /** Saves the data; only called when there are no errors (and, for replace, no blockers). */
-  save: (mode: ImportMode) => Promise<void>;
+  save: (mode: ImportMode) => Promise<ImportResult>;
+  /** Runs after a save, e.g. loads the data again (the screen may be shown anew). */
+  afterSave: () => Promise<void>;
 };
+
+/**
+ * The message after the last save, by import id — kept outside the component, as the screen may be shown anew
+ * after the save; shown until closed or until the next import.
+ */
+const notices = new Map<string, string>();
+
+function noticeText({ added, updated, deleted }: ImportResult): string {
+  return `Zapisano: nowe ${added}, zmienione ${updated}, usunięte ${deleted}`;
+}
 
 type Checked = { fileName: string; check: ImportCheck };
 type State =
@@ -39,17 +54,38 @@ const MAX_LINES = 20;
  * update) and "Zastąp" (also delete what is not in the file — asked to confirm, as it cannot be undone).
  * Nothing is saved before one of them.
  */
-export function ImportButton({ check }: { check: (text: string) => ImportCheck | Promise<ImportCheck> }) {
+export function ImportButton({
+  id,
+  check,
+}: {
+  /** Keeps the message after a save apart from other screens' imports, e.g. "products". */
+  id: string;
+  check: (text: string) => ImportCheck | Promise<ImportCheck>;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<State>({ status: "idle" });
+  const [notice, setNotice] = useState(() => notices.get(id) ?? null);
+
+  function closeNotice() {
+    notices.delete(id);
+    setNotice(null);
+  }
 
   async function read(file: File) {
+    closeNotice();
     setState({ status: "checking", fileName: file.name });
     try {
       const result = await check(await file.text());
       setState({ status: "checked", fileName: file.name, check: result });
     } catch (error) {
-      const failed: ImportCheck = { errors: [(error as Error).message], warnings: [], summary: "", replace: null, save: async () => {} };
+      const failed: ImportCheck = {
+        errors: [(error as Error).message],
+        warnings: [],
+        summary: "",
+        replace: null,
+        save: async () => ({ added: 0, updated: 0, deleted: 0 }),
+        afterSave: async () => {},
+      };
       setState({ status: "checked", fileName: file.name, check: failed });
     }
   }
@@ -59,11 +95,16 @@ export function ImportButton({ check }: { check: (text: string) => ImportCheck |
     const { fileName, check: result } = state;
     setState({ status: "saving", fileName, check: result });
     try {
-      await result.save(mode);
+      const saved = await result.save(mode);
+      notices.set(id, noticeText(saved));
+      setNotice(noticeText(saved));
       setState({ status: "idle" });
     } catch (error) {
       setState({ status: "error", fileName, check: result, message: (error as Error).message });
+      return;
     }
+    // after the message is kept: loading the data again may show the screen anew
+    await result.afterSave();
   }
 
   const close = () => setState({ status: "idle" });
@@ -84,6 +125,14 @@ export function ImportButton({ check }: { check: (text: string) => ImportCheck |
           if (file) void read(file);
         }}
       />
+      {notice && state.status === "idle" && (
+        <p className="import-notice" role="status">
+          <span>{notice}</span>
+          <button type="button" className="import-notice-close" aria-label="Zamknij" onClick={closeNotice}>
+            ✕
+          </button>
+        </p>
+      )}
       {state.status === "checking" && (
         <section className="import-panel" aria-live="polite">
           <p className="import-result">Sprawdzanie pliku {state.fileName}…</p>

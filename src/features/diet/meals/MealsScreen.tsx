@@ -72,7 +72,7 @@ export function MealsScreen() {
           {query ? `${meals.length} z ${allMeals.length}` : allMeals.length} dań
         </p>
         <ExportButton onExport={() => downloadFile(`posilki-${toIsoDate(new Date())}.csv`, exportMeals())} />
-        <ImportButton check={checkMealsFile} />
+        <ImportButton id="meals" check={checkMealsFile} />
       </header>
 
       <input

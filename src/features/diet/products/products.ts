@@ -1,4 +1,5 @@
 import { request } from "../../../shared/api";
+import type { ImportResult } from "../../../shared/ui/ImportButton";
 import { matchesWords } from "../../../shared/text";
 import { dietBase } from "../diet-base";
 
@@ -115,10 +116,11 @@ export function getProductWarnings(): ProductWarning[] {
  * Import: saves the products (a known id updates, a new id adds; "replace" also deletes the products not in the list)
  * — PUT /api/diet-base/products.
  */
-export async function saveProducts(products: readonly Product[], mode: "add" | "replace"): Promise<void> {
-  await request("/api/diet-base/products", {
+export async function saveProducts(products: readonly Product[], mode: "add" | "replace"): Promise<ImportResult> {
+  const response = await request("/api/diet-base/products", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items: products, mode }),
   });
+  return (await response.json()) as ImportResult;
 }

@@ -1,12 +1,12 @@
 import { normalize } from "../../shared/text";
-import type { ImportCheck, ImportMode } from "../../shared/ui/ImportButton";
+import type { ImportCheck, ImportMode, ImportResult } from "../../shared/ui/ImportButton";
 
 /**
  * Rules shared by the CSV imports of products, meals and meal plans.
  * See documentation: Modules/Diet/Decision 005 - Diet data in the database → Import.
  */
 
-export type { ImportCheck, ImportMode };
+export type { ImportCheck, ImportMode, ImportResult };
 
 /** Collects errors and warnings with the row number ("Wiersz 5: …"; the header is row 1). */
 export class ImportLog {
@@ -22,7 +22,14 @@ export class ImportLog {
 
 /** A check that stops before saving anything (e.g. a wrong header). */
 export function failedCheck(errors: string[]): ImportCheck {
-  return { errors, warnings: [], summary: "", replace: null, save: async () => {} };
+  return {
+    errors,
+    warnings: [],
+    summary: "",
+    replace: null,
+    save: async () => ({ added: 0, updated: 0, deleted: 0 }),
+    afterSave: async () => {},
+  };
 }
 
 /** The header must have exactly these columns, in this order. */

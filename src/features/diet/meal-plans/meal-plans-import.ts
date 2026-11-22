@@ -18,6 +18,7 @@ import {
   itemTotals,
   MEAL_TYPES,
   PLAN_NAME_MAX,
+  rememberVariant,
   saveMealPlans,
   type MealPlan,
   type MealPlanItem,
@@ -200,9 +201,10 @@ export async function checkMealPlansFile(text: string): Promise<ImportCheck> {
         ? affectedLines([["Plan tygodnia - dni z tym jadłospisem jako źródłem", deleted.reduce((n, p) => n + (usage.weekDays.plans[p.id] ?? 0), 0)]])
         : [],
     },
-    save: async (mode) => {
-      await saveMealPlans({ id: variantId, name: variantName, targetKcal }, cleanPlans, mode);
-      await loadDietBase(true);
+    save: (mode) => saveMealPlans({ id: variantId, name: variantName, targetKcal }, cleanPlans, mode),
+    afterSave: () => {
+      rememberVariant(variantId);
+      return loadDietBase(true);
     },
   };
 }

@@ -3,6 +3,7 @@
  * See documentation: Modules/Diet/Decision 005 - Diet data in the database → Import.
  * The app does the full check of a CSV file; the server checks the shape and that every reference exists.
  */
+import { GAIN_MACROS, MEAL_TYPE_MAX } from "./diet-rules";
 import { isInt, isRecord } from "./validation";
 
 // ---- shared with the app — must match the app code named next to each constant ----
@@ -17,11 +18,6 @@ const OPTIONAL_NUTRIENTS = [
 /** Must match MEAL_TAGS in src/features/diet/meals/meals.ts. */
 const MEAL_TAGS = ["śniadanie", "obiad", "kolacja", "przekąska"];
 
-/** Must match GAIN_MACROS in src/features/diet/meals/meals.ts. */
-const GAIN_MACROS = ["protein", "carbs", "fat"];
-
-/** Must match MEAL_TYPES in src/features/diet/meal-plans/meal-plans.ts. */
-const MEAL_TYPE_MAX: Record<string, number> = { "śniadanie": 1, obiad: 1, podwieczorek: 1, "przekąska": 2, kolacja: 1 };
 
 /** Must match PLAN_NAME_MAX in src/features/diet/meal-plans/meal-plans.ts. */
 export const PLAN_NAME_MAX = 100;

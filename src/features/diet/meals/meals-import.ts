@@ -198,9 +198,7 @@ export async function checkMealsFile(text: string): Promise<ImportCheck> {
         ? affectedLines([["Plan tygodnia - dania w zapisanych dniach", deleted.filter((m) => usage.weekDays.meals[m.id]).length]])
         : [],
     },
-    save: async (mode) => {
-      await saveMeals(meals, mode);
-      await loadDietBase(true);
-    },
+    save: (mode) => saveMeals(meals, mode),
+    afterSave: () => loadDietBase(true),
   };
 }

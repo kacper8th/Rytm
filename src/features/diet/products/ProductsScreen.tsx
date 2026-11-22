@@ -94,7 +94,7 @@ export function ProductsScreen() {
           100 g
         </p>
         <ExportButton onExport={() => downloadFile(`produkty-${toIsoDate(new Date())}.csv`, exportProducts())} />
-        <ImportButton check={checkProductsFile} />
+        <ImportButton id="products" check={checkProductsFile} />
       </header>
 
       <input
