@@ -9,7 +9,11 @@ import {
   type NutrientKey,
   type Product,
 } from "./products";
+import { exportProducts } from "./products-export";
+import { downloadFile } from "../../../shared/csv";
+import { toIsoDate } from "../../../shared/dates";
 import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
+import { ExportButton } from "../../../shared/ui/ExportButton";
 import "./ProductsScreen.css";
 
 type SortKey = "name" | NutrientKey;
@@ -87,6 +91,7 @@ export function ProductsScreen() {
           {query ? `${products.length} z ${allProducts.length}` : allProducts.length} produktów · wartości na
           100 g
         </p>
+        <ExportButton onExport={() => downloadFile(`produkty-${toIsoDate(new Date())}.csv`, exportProducts())} />
       </header>
 
       <input

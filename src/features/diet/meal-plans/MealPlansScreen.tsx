@@ -1,9 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { number } from "../meals/MealDetails";
 import { getMealPlanVariants, planName, planTotals, PLAN_NAME_MAX, renamePlan, TARGET_TOLERANCE, type MealPlan } from "./meal-plans";
 import { PlanCardSummary, PlanItems } from "./PlanItems";
+import { exportMealPlanVariant } from "./meal-plans-export";
 import { usePlanNames } from "./usePlanNames";
+import { downloadFile } from "../../../shared/csv";
+import { toIsoDate } from "../../../shared/dates";
+import { ExportButton } from "../../../shared/ui/ExportButton";
 import "./MealPlansScreen.css";
 
 /** Saving a new name; on error the form stays open so the user can retry. */
@@ -79,7 +83,16 @@ export function MealPlansScreen() {
 
   return (
     <div className="meal-plans page-wide">
-      <PlansHeader count={variant.plans.length} />
+      <PlansHeader count={variant.plans.length}>
+        {/* names must be loaded, otherwise the file would get the default names */}
+        <ExportButton
+          disabled={!names}
+          onExport={() =>
+            names &&
+            downloadFile(`jadlospisy-${variant.id}-${toIsoDate(new Date())}.csv`, exportMealPlanVariant(variant, names))
+          }
+        />
+      </PlansHeader>
 
       {namesError && (
         <div className="plans-status is-error" role="alert">
@@ -201,7 +214,7 @@ function NameForm({ initial, saving, onSave, onCancel }: NameFormProps) {
   );
 }
 
-function PlansHeader({ count }: { count: number }) {
+function PlansHeader({ count, children }: { count: number; children?: ReactNode }) {
   return (
     <header className="meals-header">
       <Link to="/diet" className="meals-back">
@@ -209,6 +222,7 @@ function PlansHeader({ count }: { count: number }) {
       </Link>
       <h1 className="meals-title">Jadłospisy</h1>
       <p className="meals-count">{count} jadłospisów</p>
+      {children}
     </header>
   );
 }

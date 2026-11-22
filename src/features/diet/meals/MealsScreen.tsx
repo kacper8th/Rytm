@@ -3,7 +3,11 @@ import { Link } from "react-router";
 import { MACROS_ON_CARD, MealDetails, nutrientShort, number } from "./MealDetails";
 import { getMeals, mealIngredients, mealTotals, type GainMacro, type GainSteps, type Meal } from "./meals";
 import { matchesWords } from "../../../shared/text";
+import { exportMeals } from "./meals-export";
+import { downloadFile } from "../../../shared/csv";
+import { toIsoDate } from "../../../shared/dates";
 import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
+import { ExportButton } from "../../../shared/ui/ExportButton";
 import "./MealsScreen.css";
 
 type SortKey = "name" | "kcal" | "protein" | "fat" | "carbs";
@@ -65,6 +69,7 @@ export function MealsScreen() {
         <p className="meals-count">
           {query ? `${meals.length} z ${allMeals.length}` : allMeals.length} dań
         </p>
+        <ExportButton onExport={() => downloadFile(`posilki-${toIsoDate(new Date())}.csv`, exportMeals())} />
       </header>
 
       <input
