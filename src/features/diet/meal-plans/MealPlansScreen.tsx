@@ -1,13 +1,15 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { number } from "../meals/MealDetails";
-import { getMealPlanVariants, planName, planTotals, PLAN_NAME_MAX, renamePlan, TARGET_TOLERANCE, type MealPlan } from "./meal-plans";
+import { getMealPlanVariants, planTotals, PLAN_NAME_MAX, renamePlan, TARGET_TOLERANCE, type MealPlan } from "./meal-plans";
 import { PlanCardSummary, PlanItems } from "./PlanItems";
 import { exportMealPlanVariant } from "./meal-plans-export";
-import { usePlanNames } from "./usePlanNames";
 import { downloadFile } from "../../../shared/csv";
 import { toIsoDate } from "../../../shared/dates";
+import { slugify } from "../../../shared/text";
 import { ExportButton } from "../../../shared/ui/ExportButton";
+import { ImportButton } from "../../../shared/ui/ImportButton";
+import { checkMealPlansFile } from "./meal-plans-import";
 import "./MealPlansScreen.css";
 
 /** Saving a new name; on error the form stays open so the user can retry. */
@@ -16,40 +18,39 @@ type Saving = { status: "idle" } | { status: "saving" } | { status: "error"; mes
 export function MealPlansScreen() {
   const variants = getMealPlanVariants();
   const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
-  const [openNumber, setOpenNumber] = useState<number | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [saving, setSaving] = useState<Saving>({ status: "idle" });
-  const { names, error: namesError, reload: reloadNames, setNames } = usePlanNames();
 
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
   const totals = useMemo(
-    () => new Map((variant?.plans ?? []).map((plan) => [plan.number, planTotals(plan)])),
+    () => new Map((variant?.plans ?? []).map((plan) => [plan.id, planTotals(plan)])),
     [variant],
   );
 
   if (!variant) {
     return (
       <div className="meal-plans page-wide">
-        <PlansHeader count={0} />
+        <PlansHeader count={0}>
+          <ImportButton check={checkMealPlansFile} />
+        </PlansHeader>
         <p className="meals-empty">Brak jadłospisów.</p>
       </div>
     );
   }
 
-  const openPlan = variant.plans.find((plan) => plan.number === openNumber) ?? null;
-  const nameOf = (plan: MealPlan) => planName(names, variant.id, plan.number);
+  const openPlan = variant.plans.find((plan) => plan.id === openId) ?? null;
 
-  function open(planNumber: number | null) {
-    setOpenNumber(planNumber);
+  function open(planId: string | null) {
+    setOpenId(planId);
     setRenaming(false);
     setSaving({ status: "idle" });
   }
 
   async function saveName(plan: MealPlan, name: string) {
-    if (!names) return;
     setSaving({ status: "saving" });
     try {
-      setNames(await renamePlan(names, variant!.id, plan.number, name));
+      await renamePlan(plan.id, name);
       setRenaming(false);
       setSaving({ status: "idle" });
     } catch (error) {
@@ -61,7 +62,7 @@ export function MealPlansScreen() {
     <>
       {renaming ? (
         <NameForm
-          initial={nameOf(plan)}
+          initial={plan.name}
           saving={saving}
           onSave={(name) => void saveName(plan, name)}
           onCancel={() => {
@@ -71,37 +72,25 @@ export function MealPlansScreen() {
         />
       ) : (
         <div className="plans-actions">
-          {/* names must be loaded: a rename replaces the whole loaded set */}
-          <button type="button" className="plans-button" disabled={!names} onClick={() => setRenaming(true)}>
+          <button type="button" className="plans-button" onClick={() => setRenaming(true)}>
             Zmień nazwę
           </button>
         </div>
       )}
-      <PlanItems key={plan.number} items={plan.items} />
+      <PlanItems key={plan.id} items={plan.items} />
     </>
   );
 
   return (
     <div className="meal-plans page-wide">
       <PlansHeader count={variant.plans.length}>
-        {/* names must be loaded, otherwise the file would get the default names */}
         <ExportButton
-          disabled={!names}
           onExport={() =>
-            names &&
-            downloadFile(`jadlospisy-${variant.id}-${toIsoDate(new Date())}.csv`, exportMealPlanVariant(variant, names))
+            downloadFile(`jadlospisy-${slugify(variant.name)}-${toIsoDate(new Date())}.csv`, exportMealPlanVariant(variant))
           }
         />
+        <ImportButton check={checkMealPlansFile} />
       </PlansHeader>
-
-      {namesError && (
-        <div className="plans-status is-error" role="alert">
-          <span>Nie udało się wczytać nazw jadłospisów. {namesError}</span>
-          <button type="button" className="plans-button" onClick={reloadNames}>
-            Spróbuj ponownie
-          </button>
-        </div>
-      )}
 
       <div className="meals-sort">
         <label className="meals-sort-label" htmlFor="meal-plans-variant">
@@ -130,16 +119,16 @@ export function MealPlansScreen() {
       <div className="meals-layout">
         <ul className="meals-list">
           {variant.plans.map((plan) => {
-            const isOpen = openNumber === plan.number;
+            const isOpen = openId === plan.id;
             return (
-              <li key={plan.number} className={"meals-item" + (isOpen ? " is-open" : "")}>
+              <li key={plan.id} className={"meals-item" + (isOpen ? " is-open" : "")}>
                 <button
                   type="button"
                   className="meals-item-summary"
                   aria-expanded={isOpen}
-                  onClick={() => open(isOpen ? null : plan.number)}
+                  onClick={() => open(isOpen ? null : plan.id)}
                 >
-                  <PlanCardSummary title={nameOf(plan)} totals={totals.get(plan.number)!} targetKcal={variant.targetKcal} />
+                  <PlanCardSummary title={plan.name} totals={totals.get(plan.id)!} targetKcal={variant.targetKcal} />
                 </button>
 
                 {/* phone: details under the card */}
@@ -153,7 +142,7 @@ export function MealPlansScreen() {
         <aside className="meals-panel">
           {openPlan ? (
             <div className="meals-details">
-              <h2 className="meals-panel-title">{nameOf(openPlan)}</h2>
+              <h2 className="meals-panel-title">{openPlan.name}</h2>
               {details(openPlan)}
             </div>
           ) : (

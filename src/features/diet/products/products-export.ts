@@ -3,7 +3,7 @@ import { getProducts, type NutrientKey } from "./products";
 
 /**
  * Export of all products to CSV — columns as in the documentation: Modules/Diet/Products → Export.
- * Nutrient columns in the order and with the names of the spreadsheet (same as the import script).
+ * Nutrient columns in the order and with the names of the spreadsheet; the import reads the same columns.
  */
 const NUTRIENT_COLUMNS: { header: string; key: NutrientKey }[] = [
   { header: "węglowodany, g", key: "carbs" },
@@ -30,7 +30,16 @@ const NUTRIENT_COLUMNS: { header: string; key: NutrientKey }[] = [
   { header: "jod, µg", key: "iodine" },
 ];
 
-const HEADER = ["ID", "kategoria", "firma", "nazwa produktu", ...NUTRIENT_COLUMNS.map((c) => c.header)];
+/** All columns of the file, in order — also read by the import (products-import.ts). */
+export const PRODUCT_COLUMNS: { header: string; nutrient?: NutrientKey }[] = [
+  { header: "ID" },
+  { header: "kategoria" },
+  { header: "firma" },
+  { header: "nazwa produktu" },
+  ...NUTRIENT_COLUMNS.map((c) => ({ header: c.header, nutrient: c.key })),
+];
+
+const HEADER = PRODUCT_COLUMNS.map((c) => c.header);
 
 /** The CSV file of all products; "no data" is an empty cell. */
 export function exportProducts(): string {

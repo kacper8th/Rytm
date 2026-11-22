@@ -8,9 +8,6 @@
     "dev:api": "wrangler pages dev --port 8788",
     "build": "tsc --noEmit && tsc --noEmit -p functions && vite build",
     "preview": "vite preview",
-    "import:products": "node scripts/import-products.mjs",
-    "import:meals": "node scripts/import-meals.mjs",
-    "import:meal-plans": "node scripts/import-meal-plans.mjs",
     "db:migrate:local": "wrangler d1 migrations apply rytm-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply rytm-db --remote"
   },

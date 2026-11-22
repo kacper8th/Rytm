@@ -1,9 +1,10 @@
+import { request } from "../../../shared/api";
 import { matchesWords } from "../../../shared/text";
-import { PRODUCT_WARNINGS, PRODUCTS } from "./products.data";
+import { dietBase } from "../diet-base";
 
 /**
- * Products — fixed data generated from products.csv (see scripts/import-products.mjs).
- * See documentation: Modules/Diet/Products, Decisions/Decision 002 - Data.
+ * Products — part of the Diet base in the database (see ../diet-base.ts).
+ * See documentation: Modules/Diet/Products, Modules/Diet/Decision 005 - Diet data in the database.
  */
 
 export type NutrientGroup = "macro" | "vitamin" | "mineral";
@@ -20,7 +21,7 @@ export type Nutrient = {
   required: boolean;
 };
 
-/** All nutrients in display order. Keys match the import script. */
+/** All nutrients in display order. Keys must match the nutrient lists in functions/_lib/diet-base.ts. */
 export const NUTRIENTS = [
   { key: "kcal", label: "Kalorie", short: "kcal", unit: "kcal", group: "macro", required: true },
   { key: "protein", label: "Białko", short: "B", unit: "g", group: "macro", required: true },
@@ -57,7 +58,7 @@ export const NUTRIENT_GROUPS: { group: NutrientGroup; label: string }[] = [
 ];
 
 export type Product = {
-  /** Stable id (slug of the name), e.g. "kasza-gryczana". */
+  /** Stable id (UUID), given when the product is created. */
   id: string;
   name: string;
   /** Category from the spreadsheet, e.g. "warzywa". */
@@ -67,7 +68,7 @@ export type Product = {
   nutrients: Record<RequiredNutrientKey, number> & Record<OptionalNutrientKey, number | null>;
 };
 
-/** Data to check, found by the import script. */
+/** Data to check, found when the base is loaded. */
 export type ProductWarning = {
   productId: string;
   /** kcal differs from 4·carbs + 4·protein + 9·fat. */
@@ -76,9 +77,14 @@ export type ProductWarning = {
   estimatedKcal: number;
 };
 
-/** The only way screens get products — when data moves to a database, only this changes. */
+/** The only way screens get products (from the loaded Diet base). */
 export function getProducts(): readonly Product[] {
-  return PRODUCTS;
+  return dietBase().products;
+}
+
+/** The product with this id, or undefined when it is not in the base. */
+export function findProduct(id: string): Product | undefined {
+  return dietBase().productsById.get(id);
 }
 
 /** Amount per 100 g for calculations (e.g. meals) — "no data" counts as 0. */
@@ -91,6 +97,28 @@ export function productMatches(product: Product, query: string): boolean {
   return matchesWords(`${product.name} ${product.brand ?? ""} ${product.category}`, query);
 }
 
-export function getProductWarnings(): readonly ProductWarning[] {
-  return PRODUCT_WARNINGS;
+/** kcal differing from 4·carbs + 4·protein + 9·fat by more than this is shown in "Do sprawdzenia". */
+const KCAL_TOLERANCE = { absolute: 25, relative: 0.15 };
+
+export function getProductWarnings(): ProductWarning[] {
+  return getProducts().flatMap((product): ProductWarning[] => {
+    const { kcal, carbs, protein, fat } = product.nutrients;
+    const estimatedKcal = 4 * carbs + 4 * protein + 9 * fat;
+    const allowed = Math.max(KCAL_TOLERANCE.absolute, KCAL_TOLERANCE.relative * kcal);
+    return Math.abs(estimatedKcal - kcal) > allowed
+      ? [{ productId: product.id, type: "kcal", kcal, estimatedKcal: Math.round(estimatedKcal) }]
+      : [];
+  });
+}
+
+/**
+ * Import: saves the products (a known id updates, a new id adds; "replace" also deletes the products not in the list)
+ * — PUT /api/diet-base/products.
+ */
+export async function saveProducts(products: readonly Product[], mode: "add" | "replace"): Promise<void> {
+  await request("/api/diet-base/products", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items: products, mode }),
+  });
 }

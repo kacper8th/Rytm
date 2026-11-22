@@ -19,7 +19,8 @@ export type WeekPlanItem =
   | { mealType: string; kind: "meal"; mealId: string; steps: Record<string, number> }
   | { mealType: string; kind: "product"; productId: string; grams: number };
 
-export type WeekPlanSource = { variantId: string; planNumber: number };
+/** The meal plan the day was copied from (its id in the Diet base). */
+export type WeekPlanSource = { planId: string };
 
 export type WeekPlanDay = {
   day: number;
@@ -49,11 +50,18 @@ export function parseDay(value: unknown): number | null {
   return Number(value);
 }
 
+/** A saved source; a source in an older shape (before the Diet base moved to the database) reads as no source. */
+function parseStoredSource(value: string | null): WeekPlanSource | null {
+  if (value === null) return null;
+  const source = JSON.parse(value) as Record<string, unknown>;
+  return typeof source.planId === "string" ? { planId: source.planId } : null;
+}
+
 export function rowToDay(row: WeekPlanDayRow): WeekPlanDay {
   return {
     day: row.day,
     items: JSON.parse(row.items) as WeekPlanItem[],
-    source: row.source === null ? null : (JSON.parse(row.source) as WeekPlanSource),
+    source: parseStoredSource(row.source),
     updatedAt: row.updated_at,
   };
 }
@@ -97,8 +105,6 @@ export function parseDayBody(body: unknown): { items: WeekPlanItem[]; source: We
   }
 
   if (source === undefined || source === null) return { items: clean, source: null };
-  if (!isRecord(source) || !isId(source.variantId) || !Number.isInteger(source.planNumber) || (source.planNumber as number) <= 0) {
-    return "`source` must be {variantId, planNumber} or null.";
-  }
-  return { items: clean, source: { variantId: source.variantId, planNumber: source.planNumber as number } };
+  if (!isRecord(source) || !isId(source.planId)) return "`source` must be {planId} or null.";
+  return { items: clean, source: { planId: source.planId } };
 }

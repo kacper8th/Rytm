@@ -8,6 +8,8 @@ import { downloadFile } from "../../../shared/csv";
 import { toIsoDate } from "../../../shared/dates";
 import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
 import { ExportButton } from "../../../shared/ui/ExportButton";
+import { ImportButton } from "../../../shared/ui/ImportButton";
+import { checkMealsFile } from "./meals-import";
 import "./MealsScreen.css";
 
 type SortKey = "name" | "kcal" | "protein" | "fat" | "carbs";
@@ -70,6 +72,7 @@ export function MealsScreen() {
           {query ? `${meals.length} z ${allMeals.length}` : allMeals.length} dań
         </p>
         <ExportButton onExport={() => downloadFile(`posilki-${toIsoDate(new Date())}.csv`, exportMeals())} />
+        <ImportButton check={checkMealsFile} />
       </header>
 
       <input

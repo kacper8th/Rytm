@@ -1,8 +1,9 @@
-import { getProducts, NUTRIENTS, nutrientAmount, type NutrientKey, type Product } from "../products/products";
-import { MEALS } from "./meals.data";
+import { request } from "../../../shared/api";
+import { dietBase } from "../diet-base";
+import { findProduct, NUTRIENTS, nutrientAmount, type NutrientKey, type Product } from "../products/products";
 
 /**
- * Meals — fixed data generated from meals.csv (see scripts/import-meals.mjs).
+ * Meals — part of the Diet base in the database (see ../diet-base.ts).
  * Ingredients refer to products by id. See documentation: Modules/Diet/Meals.
  */
 
@@ -31,7 +32,7 @@ export type MealGain = {
 };
 
 export type Meal = {
-  /** Slug of the name, e.g. "jaglane-nalesniki". */
+  /** Stable id (UUID), given when the meal is created. */
   id: string;
   name: string;
   tags: MealTag[];
@@ -49,18 +50,20 @@ export type MealIngredient = {
   grams: number;
 };
 
-/** The only way screens get meals — when data moves to a database, only this changes. */
+/** The only way screens get meals (from the loaded Diet base). */
 export function getMeals(): readonly Meal[] {
-  return MEALS;
+  return dietBase().meals;
 }
 
-let productsById: Map<string, Product> | null = null;
+/** The meal with this id, or undefined when it is not in the base. */
+export function findMeal(id: string): Meal | undefined {
+  return dietBase().mealsById.get(id);
+}
 
 function productById(id: string): Product {
-  productsById ??= new Map(getProducts().map((p) => [p.id, p]));
-  const product = productsById.get(id);
-  // The import checks every product id, so this only happens when products.data.ts changed without re-importing meals.
-  if (!product) throw new Error(`Meal refers to unknown product "${id}" — run npm run import:meals`);
+  const product = findProduct(id);
+  // The import and the server check every product id, so this only happens when the database was changed by hand.
+  if (!product) throw new Error(`Meal refers to unknown product "${id}"`);
   return product;
 }
 
@@ -98,4 +101,16 @@ export function mealTotals(ingredients: readonly MealIngredient[]): Record<Nutri
 /** A recipe starting with http(s) is shown as a link. */
 export function isRecipeLink(recipe: string): boolean {
   return /^https?:\/\//.test(recipe.trim());
+}
+
+/**
+ * Import: saves the meals (a known id replaces the meal, a new id adds it; "replace" also deletes the meals not in the list)
+ * — PUT /api/diet-base/meals.
+ */
+export async function saveMeals(meals: readonly Meal[], mode: "add" | "replace"): Promise<void> {
+  await request("/api/diet-base/meals", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items: meals, mode }),
+  });
 }

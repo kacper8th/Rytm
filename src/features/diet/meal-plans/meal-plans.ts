@@ -1,14 +1,14 @@
 import { request } from "../../../shared/api";
-import { getMeals, mealIngredients, mealTotals, type GainSteps, type Meal, type MealIngredient } from "../meals/meals";
-import { getProducts, type NutrientKey, type Product } from "../products/products";
-import { MEAL_PLAN_VARIANTS } from "./meal-plans.data";
+import { dietBase, setPlanNameInBase } from "../diet-base";
+import { findMeal, mealIngredients, mealTotals, type GainSteps, type Meal, type MealIngredient } from "../meals/meals";
+import { findProduct, type NutrientKey, type Product } from "../products/products";
 
 /**
- * Meal plans — fixed data generated from meal-plans/data/*.csv (see scripts/import-meal-plans.mjs).
+ * Meal plans — part of the Diet base in the database (see ../diet-base.ts).
  * Items refer to meals and products by id. See documentation: Modules/Diet/Meal plans.
  */
 
-/** Meal types in display order, with the max count per plan. Must match MEAL_TYPES in the import script. */
+/** Meal types in display order, with the max count per plan. Must match MEAL_TYPE_MAX in functions/_lib/diet-base.ts and functions/_lib/week-plan.ts. */
 export const MEAL_TYPES = [
   { key: "śniadanie", label: "Śniadanie", max: 1 },
   { key: "obiad", label: "Obiad", max: 1 },
@@ -27,88 +27,64 @@ export type MealPlanItem =
   | { mealType: MealType; kind: "product"; productId: string; grams: number };
 
 export type MealPlan = {
-  /** Number from the spreadsheet — gaps allowed. */
-  number: number;
+  /** Stable id (UUID), given when the plan is created. */
+  id: string;
+  /** Chosen by the user, 1–PLAN_NAME_MAX characters. */
+  name: string;
   /** In the order of the file — use planItems() for display order. */
   items: MealPlanItem[];
 };
 
-/** One CSV file. The name is chosen by the user, e.g. "2800 kcal". */
+/** A group of meal plans with a target, e.g. "2800 kcal". */
 export type MealPlanVariant = {
-  /** Slug of the name, e.g. "2800-kcal". */
+  /** Stable id (UUID), given when the variant is created. */
   id: string;
   name: string;
   targetKcal: number;
-  /** Sorted by number. */
+  /** In the order they were added. */
   plans: MealPlan[];
 };
 
-/** The only way screens get meal plans — when data moves to a database, only this changes. */
+/** The only way screens get meal plans (from the loaded Diet base). */
 export function getMealPlanVariants(): readonly MealPlanVariant[] {
-  return MEAL_PLAN_VARIANTS;
+  return dietBase().variants;
 }
 
-// ---- names (user data on the server, /api/meal-plan-names) ----
+/** The plan with this id and its variant, or undefined when it is not in the base. */
+export function findPlan(planId: string): { variant: MealPlanVariant; plan: MealPlan } | undefined {
+  for (const variant of getMealPlanVariants()) {
+    const plan = variant.plans.find((p) => p.id === planId);
+    if (plan) return { variant, plan };
+  }
+  return undefined;
+}
 
-/** Saved names by "variantId/planNumber"; a plan without an entry has the default name. */
-export type PlanNames = ReadonlyMap<string, string>;
+// ---- names ----
 
-/** Must match NAME_MAX in functions/_lib/meal-plan-names.ts. */
+/** Must match PLAN_NAME_MAX in functions/_lib/diet-base.ts. */
 export const PLAN_NAME_MAX = 100;
 
-const nameKey = (variantId: string, planNumber: number) => `${variantId}/${planNumber}`;
-
-/** The name of a plan that was never renamed. */
-export function defaultPlanName(planNumber: number): string {
-  return `Jadłospis ${planNumber}`;
-}
-
-/** The plan's name: the saved one, or the default while names are not loaded (null) or the plan was never renamed. */
-export function planName(names: PlanNames | null, variantId: string, planNumber: number): string {
-  return names?.get(nameKey(variantId, planNumber)) ?? defaultPlanName(planNumber);
-}
-
-/** Names loaded in this app session — shared by every screen, updated on rename. */
-let cachedNames: PlanNames | null = null;
-
-export function cachedPlanNames(): PlanNames | null {
-  return cachedNames;
-}
-
-export async function getPlanNames(): Promise<PlanNames> {
-  const response = await request("/api/meal-plan-names");
-  const { names } = (await response.json()) as { names: { variantId: string; planNumber: number; name: string }[] };
-  cachedNames = new Map(names.map((n) => [nameKey(n.variantId, n.planNumber), n.name]));
-  return cachedNames;
-}
-
-/** Saves the plan's name (1–PLAN_NAME_MAX characters after trimming) and returns all names with it. */
-export async function renamePlan(names: PlanNames, variantId: string, planNumber: number, name: string): Promise<PlanNames> {
-  const response = await request(`/api/meal-plan-names/${encodeURIComponent(variantId)}/${planNumber}`, {
+/** Saves the plan's name (1–PLAN_NAME_MAX characters after trimming) and puts it into the loaded base. */
+export async function renamePlan(planId: string, name: string): Promise<void> {
+  const response = await request(`/api/meal-plans/${encodeURIComponent(planId)}/name`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
   });
   const saved = (await response.json()) as { name: string };
-  cachedNames = new Map(names).set(nameKey(variantId, planNumber), saved.name);
-  return cachedNames;
+  setPlanNameInBase(planId, saved.name);
 }
 
 // ---- items ----
 
-let mealsById: Map<string, Meal> | null = null;
-let productsById: Map<string, Product> | null = null;
-
 /** The meal of an item, or undefined when its id is no longer in Meals (possible in saved week plans). */
 export function findPlanMeal(item: Extract<MealPlanItem, { kind: "meal" }>): Meal | undefined {
-  mealsById ??= new Map(getMeals().map((m) => [m.id, m]));
-  return mealsById.get(item.mealId);
+  return findMeal(item.mealId);
 }
 
 /** The product of an item, or undefined when its id is no longer in Products. */
 export function findPlanProduct(item: Extract<MealPlanItem, { kind: "product" }>): Product | undefined {
-  productsById ??= new Map(getProducts().map((p) => [p.id, p]));
-  return productsById.get(item.productId);
+  return findProduct(item.productId);
 }
 
 export function isItemKnown(item: MealPlanItem): boolean {
@@ -117,14 +93,14 @@ export function isItemKnown(item: MealPlanItem): boolean {
 
 export function planMeal(item: Extract<MealPlanItem, { kind: "meal" }>): Meal {
   const meal = findPlanMeal(item);
-  // The import checks every id, so this only happens when meals.data.ts changed without re-importing meal plans.
-  if (!meal) throw new Error(`Meal plan refers to unknown meal "${item.mealId}" — run npm run import:meal-plans`);
+  // The import and the server check every id, so this only happens when the database was changed by hand.
+  if (!meal) throw new Error(`Meal plan refers to unknown meal "${item.mealId}"`);
   return meal;
 }
 
 export function planProduct(item: Extract<MealPlanItem, { kind: "product" }>): Product {
   const product = findPlanProduct(item);
-  if (!product) throw new Error(`Meal plan refers to unknown product "${item.productId}" — run npm run import:meal-plans`);
+  if (!product) throw new Error(`Meal plan refers to unknown product "${item.productId}"`);
   return product;
 }
 
@@ -166,4 +142,24 @@ export function itemsTotals(items: readonly MealPlanItem[]): Record<NutrientKey,
 /** true when the day's kcal is further than ±TARGET_TOLERANCE from the target. */
 export function isOffTarget(kcal: number, targetKcal: number): boolean {
   return Math.abs(kcal - targetKcal) > targetKcal * TARGET_TOLERANCE;
+}
+
+/**
+ * Import: saves a variant and its plans (a known id updates, a new id adds; "replace" also deletes the variant's plans
+ * not in the list) — PUT /api/diet-base/meal-plans.
+ */
+export async function saveMealPlans(
+  variant: Omit<MealPlanVariant, "plans">,
+  plans: readonly MealPlan[],
+  mode: "add" | "replace",
+): Promise<void> {
+  await request("/api/diet-base/meal-plans", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      variants: [{ id: variant.id, name: variant.name, targetKcal: variant.targetKcal }],
+      plans: plans.map((plan) => ({ ...plan, variantId: variant.id })),
+      mode,
+    }),
+  });
 }

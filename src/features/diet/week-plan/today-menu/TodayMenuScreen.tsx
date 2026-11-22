@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { itemsTotals, type PlanNames } from "../../meal-plans/meal-plans";
+import { itemsTotals } from "../../meal-plans/meal-plans";
 import { PlanCardSummary, PlanItems } from "../../meal-plans/PlanItems";
-import { usePlanNames } from "../../meal-plans/usePlanNames";
 import { currentWeekStart, dayLabel, todayIn } from "../../../../shared/dates";
 import { getWeekPlan, sourceLabel, variantOf, type WeekPlanDay } from "../week-plan";
 import "../../meals/MealsScreen.css";
@@ -18,7 +17,6 @@ export function TodayMenuScreen() {
   const [day] = useState(() => todayIn(weekStart)!);
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [reloadCount, setReloadCount] = useState(0);
-  const { names } = usePlanNames();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +52,7 @@ export function TodayMenuScreen() {
 
       {load.status === "ready" &&
         (load.saved ? (
-          <TodayDay title={dayLabel(weekStart, day)} saved={load.saved} names={names} />
+          <TodayDay title={dayLabel(weekStart, day)} saved={load.saved} />
         ) : (
           <div className="today-menu-empty">
             <p className="meals-empty">Na dziś nie ma planu.</p>
@@ -67,8 +65,8 @@ export function TodayMenuScreen() {
   );
 }
 
-function TodayDay({ title, saved, names }: { title: string; saved: WeekPlanDay; names: PlanNames | null }) {
-  const source = sourceLabel(saved.source, names);
+function TodayDay({ title, saved }: { title: string; saved: WeekPlanDay }) {
+  const source = sourceLabel(saved.source);
   return (
     <>
       <div className="meals-item today-menu-card">

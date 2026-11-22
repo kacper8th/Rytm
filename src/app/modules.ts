@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import type { RouteObject } from "react-router";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DietScreen } from "../features/diet/DietScreen";
+import { withDietBase } from "../features/diet/DietBaseGate";
 import { ProductsScreen } from "../features/diet/products/ProductsScreen";
 import { MealsScreen } from "../features/diet/meals/MealsScreen";
 import { MealPlansScreen } from "../features/diet/meal-plans/MealPlansScreen";
@@ -67,21 +68,21 @@ export const MODULES: AppModule[] = [
     label: "Dieta",
     icon: "🍽️",
     path: "/diet",
-    Screen: DietScreen,
+    Screen: withDietBase(DietScreen),
     inBottomBar: true,
     subRoutes: [
-      { path: "today", Component: TodayMenuScreen },
-      { path: "products", Component: ProductsScreen },
-      { path: "meals", Component: MealsScreen },
-      { path: "meal-plans", Component: MealPlansScreen },
-      { path: "week-plan", Component: WeekPlanScreen },
-      { path: "week-plan/statistics", Component: WeekStatisticsScreen },
-      { path: "shopping-lists", Component: ShoppingListsScreen },
-      { path: "shopping-lists/new", Component: NewShoppingListScreen },
-      { path: "shopping-lists/:id", Component: ShoppingListScreen },
-      { path: "shopping-lists/:id/add", Component: AddItemScreen },
-      { path: "pantry", Component: PantryScreen },
-      { path: "pantry/add", Component: AddPantryItemScreen },
+      { path: "today", Component: withDietBase(TodayMenuScreen) },
+      { path: "products", Component: withDietBase(ProductsScreen) },
+      { path: "meals", Component: withDietBase(MealsScreen) },
+      { path: "meal-plans", Component: withDietBase(MealPlansScreen) },
+      { path: "week-plan", Component: withDietBase(WeekPlanScreen) },
+      { path: "week-plan/statistics", Component: withDietBase(WeekStatisticsScreen) },
+      { path: "shopping-lists", Component: withDietBase(ShoppingListsScreen) },
+      { path: "shopping-lists/new", Component: withDietBase(NewShoppingListScreen) },
+      { path: "shopping-lists/:id", Component: withDietBase(ShoppingListScreen) },
+      { path: "shopping-lists/:id/add", Component: withDietBase(AddItemScreen) },
+      { path: "pantry", Component: withDietBase(PantryScreen) },
+      { path: "pantry/add", Component: withDietBase(AddPantryItemScreen) },
     ],
   },
   {

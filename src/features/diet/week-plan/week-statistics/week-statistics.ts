@@ -1,6 +1,6 @@
-import { getMealPlanVariants, isItemKnown, itemIngredients, itemsTotals } from "../../meal-plans/meal-plans";
+import { isItemKnown, itemIngredients, itemsTotals } from "../../meal-plans/meal-plans";
 import { NUTRIENTS, type NutrientKey } from "../../products/products";
-import type { WeekPlanDay } from "../week-plan";
+import { variantOf, type WeekPlanDay } from "../week-plan";
 import { NORMS } from "./norms";
 
 /**
@@ -39,9 +39,8 @@ export function weekStatistics(days: readonly WeekPlanDay[]): WeekStatistics | n
     for (const { key } of NUTRIENTS) averages[key] += totals[key] / days.length;
   }
 
-  const variants = getMealPlanVariants();
   const targets = days.flatMap((day) => {
-    const variant = day.source ? variants.find((v) => v.id === day.source!.variantId) : undefined;
+    const variant = variantOf(day.source);
     return variant ? [variant.targetKcal] : [];
   });
   const targetKcal = targets.length > 0 ? targets.reduce((sum, t) => sum + t, 0) / targets.length : undefined;

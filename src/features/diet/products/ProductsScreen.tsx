@@ -14,6 +14,8 @@ import { downloadFile } from "../../../shared/csv";
 import { toIsoDate } from "../../../shared/dates";
 import { collapseOnClick } from "../../../shared/ui/collapseOnClick";
 import { ExportButton } from "../../../shared/ui/ExportButton";
+import { ImportButton } from "../../../shared/ui/ImportButton";
+import { checkProductsFile } from "./products-import";
 import "./ProductsScreen.css";
 
 type SortKey = "name" | NutrientKey;
@@ -92,6 +94,7 @@ export function ProductsScreen() {
           100 g
         </p>
         <ExportButton onExport={() => downloadFile(`produkty-${toIsoDate(new Date())}.csv`, exportProducts())} />
+        <ImportButton check={checkProductsFile} />
       </header>
 
       <input

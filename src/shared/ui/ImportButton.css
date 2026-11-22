@@ -1,0 +1,88 @@
+.import-button {
+  margin-top: var(--space-2);
+  margin-left: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.import-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.import-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.import-button.is-primary {
+  border-color: var(--color-accent);
+}
+
+.import-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.import-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.import-result {
+  margin: 0;
+}
+
+.import-result.is-error,
+.import-lines.is-error {
+  color: var(--color-accent);
+}
+
+.import-subtitle {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.import-lines {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.import-actions .import-button {
+  margin: 0;
+}
+
+.import-option {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.import-option:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.import-option-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}

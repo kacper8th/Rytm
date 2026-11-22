@@ -1,13 +1,13 @@
 import { request } from "../../../shared/api";
-import { getMealPlanVariants, planName, type MealPlanItem, type PlanNames } from "../meal-plans/meal-plans";
+import { findPlan, type MealPlanItem } from "../meal-plans/meal-plans";
 
 /**
  * Week plan — user data saved on the server (Cloudflare D1 via /api/week-plans).
  * The only way screens get or change week plans. See documentation: Modules/Diet/Week plan.
  */
 
-/** Where a day was copied from — display only. */
-export type WeekPlanSource = { variantId: string; planNumber: number };
+/** Where a day was copied from (the meal plan's id in the Diet base) — display only. */
+export type WeekPlanSource = { planId: string };
 
 export type WeekPlanDay = {
   /** 0 = Monday … 6 = Sunday. */
@@ -30,15 +30,15 @@ export type WeekSummary = { weekStart: string; days: number };
 
 // ---- source of a day ----
 
-/** The variant a day was copied from; undefined when there is no source or the variant no longer exists. */
+/** The variant of the plan a day was copied from; undefined when there is no source or the plan no longer exists. */
 export function variantOf(source: WeekPlanSource | null) {
-  return source ? getMealPlanVariants().find((v) => v.id === source.variantId) : undefined;
+  return source ? findPlan(source.planId)?.variant : undefined;
 }
 
 /** The current name of the source plan (not saved with the day, so a rename shows everywhere); null without a source. */
-export function sourceLabel(source: WeekPlanSource | null, names: PlanNames | null): string | null {
-  if (!source) return null;
-  return `Jadłospis: ${planName(names, source.variantId, source.planNumber)}`;
+export function sourceLabel(source: WeekPlanSource | null): string | null {
+  const plan = source ? findPlan(source.planId)?.plan : undefined;
+  return plan ? `Jadłospis: ${plan.name}` : null;
 }
 
 // ---- API ----
