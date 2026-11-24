@@ -14,11 +14,13 @@ import {
 import { getProducts, productMatches, type Product } from "../products/products";
 import {
   canAddItem,
+  createPlan,
   findPlanMeal,
   ITEM_GRAMS_MAX,
   itemsTotals,
   MEAL_TYPES,
   mealTypeLabel,
+  PLAN_NAME_MAX,
   savePlanItems,
   type MealPlan,
   type MealPlanItem,
@@ -30,6 +32,7 @@ import "./MealPlansScreen.css";
 /**
  * Edit mode of one meal plan: gain steps of a meal, swap a meal or a product, product grams, add and remove items.
  * Changes go into a draft; "Zapisz" saves the whole draft. See documentation: Modules/Diet/Meal plans → Edit.
+ * The same editor makes a new plan (empty or a copy) with a name field — Meal plans → New.
  */
 
 type Saving = { status: "idle" } | { status: "saving" } | { status: "error"; message: string };
@@ -45,15 +48,28 @@ type Picker =
   | { mode: "add"; mealType: MealType; kind: MealPlanItem["kind"] }
   | null;
 
+/** Saved items of a new plan — none; one constant so the memo of the saved totals keeps. */
+const EMPTY_ITEMS: readonly MealPlanItem[] = [];
+
 /** Grams of a product added in the editor, changed afterwards in its grams field. */
 const NEW_PRODUCT_GRAMS = 100;
 
 type PlanEditorProps = {
-  plan: MealPlan;
   targetKcal: number;
-  /** Called after a save or a cancel. */
+  /** Called after a cancel, and after a save of an existing plan. */
   onClose: () => void;
-};
+} & (
+  | { mode: "edit"; plan: MealPlan }
+  | {
+      mode: "new";
+      variantId: string;
+      /** Start of the draft: empty, or the name and items of the copied plan. */
+      name: string;
+      items: readonly MealPlanItem[];
+      /** Called after the new plan was saved. */
+      onCreated: (plan: MealPlan) => void;
+    }
+);
 
 /** Grams typed by the user: a number > 0 and ≤ ITEM_GRAMS_MAX, decimal comma allowed; otherwise null. */
 function parseGrams(text: string): number | null {
@@ -68,9 +84,15 @@ function withStep(steps: GainSteps, key: GainMacro, change: number): GainSteps {
   return next;
 }
 
-export function PlanEditor({ plan, targetKcal, onClose }: PlanEditorProps) {
-  const [draft, setDraft] = useState<DraftItem[]>(() => plan.items.map((item, key) => ({ key, item })));
-  const [nextKey, setNextKey] = useState(plan.items.length);
+export function PlanEditor(props: PlanEditorProps) {
+  const { targetKcal, onClose } = props;
+  const isNew = props.mode === "new";
+  /** The saved items the draft is compared with; a new plan has none. */
+  const savedItems = props.mode === "edit" ? props.plan.items : EMPTY_ITEMS;
+  const startItems = props.mode === "edit" ? props.plan.items : props.items;
+  const [draft, setDraft] = useState<DraftItem[]>(() => startItems.map((item, key) => ({ key, item })));
+  const [nextKey, setNextKey] = useState(startItems.length);
+  const [name, setName] = useState(props.mode === "new" ? props.name : "");
   /** Grams as typed, per item key — kept apart from the draft so a half-typed value is not lost. */
   const [gramsText, setGramsText] = useState<Record<number, string>>({});
   const [openKey, setOpenKey] = useState<number | null>(null);
@@ -80,9 +102,12 @@ export function PlanEditor({ plan, targetKcal, onClose }: PlanEditorProps) {
   const items = draft.map((d) => d.item);
   const busy = saving.status === "saving";
   const invalid = draft.some(({ key }) => gramsText[key] !== undefined && parseGrams(gramsText[key]) === null);
-  const changed = JSON.stringify(items) !== JSON.stringify(plan.items);
+  const changed = JSON.stringify(items) !== JSON.stringify(savedItems);
+  const trimmedName = name.trim();
+  /** An edit saves only a change; a new plan needs a name and at least one item. */
+  const canSave = !busy && !invalid && (isNew ? trimmedName !== "" && items.length > 0 : changed);
   const totals = itemsTotals(items);
-  const savedTotals = useMemo(() => itemsTotals(plan.items), [plan.items]);
+  const savedTotals = useMemo(() => itemsTotals(savedItems), [savedItems]);
 
   /** Items in meal-type order; items of the same type keep their order. */
   const ordered = [...draft].sort((a, b) => typeIndex(a.item.mealType) - typeIndex(b.item.mealType));
@@ -113,8 +138,12 @@ export function PlanEditor({ plan, targetKcal, onClose }: PlanEditorProps) {
   async function save() {
     setSaving({ status: "saving" });
     try {
-      await savePlanItems(plan.id, items);
-      onClose();
+      if (props.mode === "new") {
+        props.onCreated(await createPlan(props.variantId, trimmedName, items));
+      } else {
+        await savePlanItems(props.plan.id, items);
+        onClose();
+      }
     } catch (error) {
       setSaving({ status: "error", message: (error as Error).message });
     }
@@ -219,7 +248,7 @@ export function PlanEditor({ plan, targetKcal, onClose }: PlanEditorProps) {
   return (
     <div className="plans-editor">
       <div className="plans-actions">
-        <button type="button" className="plans-button is-primary" disabled={busy || !changed || invalid} onClick={() => void save()}>
+        <button type="button" className="plans-button is-primary" disabled={!canSave} onClick={() => void save()}>
           {busy ? "Zapisywanie…" : "Zapisz"}
         </button>
         <button type="button" className="plans-button" disabled={busy} onClick={onClose}>
@@ -232,9 +261,23 @@ export function PlanEditor({ plan, targetKcal, onClose }: PlanEditorProps) {
         </p>
       )}
 
+      {isNew && (
+        <label className="plans-name-field">
+          <span>Nazwa</span>
+          <input
+            type="text"
+            className="plans-input"
+            maxLength={PLAN_NAME_MAX}
+            value={name}
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+      )}
+
       <div className="plans-editor-totals">
-        <PlanCardSummary title="Po zmianach" totals={totals} targetKcal={targetKcal} />
-        {changed && <ChangeRow totals={totals} saved={savedTotals} />}
+        <PlanCardSummary title={isNew ? "Razem" : "Po zmianach"} totals={totals} targetKcal={targetKcal} />
+        {!isNew && changed && <ChangeRow totals={totals} saved={savedTotals} />}
       </div>
 
       <ul className="plans-items">

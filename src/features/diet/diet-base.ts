@@ -63,26 +63,28 @@ export function dietBase(): Indexed {
   return base;
 }
 
-/** Puts changed fields of one meal plan into the loaded base (after a save on the server). */
-function updatePlanInBase(planId: string, change: Partial<Pick<MealPlan, "name" | "items">>) {
+/** Puts the changed plan lists of the variants into the loaded base (after a save on the server). */
+function updatePlansInBase(change: (variant: MealPlanVariant) => MealPlan[]) {
   const current = dietBase();
-  setBase(
-    {
-      ...current,
-      variants: current.variants.map((v) => ({
-        ...v,
-        plans: v.plans.map((p) => (p.id === planId ? { ...p, ...change } : p)),
-      })),
-    },
-    false,
-  );
+  setBase({ ...current, variants: current.variants.map((v) => ({ ...v, plans: change(v) })) }, false);
 }
+
+/** Puts changed fields of one meal plan into the loaded base. */
+const updatePlanInBase = (planId: string, change: Partial<Pick<MealPlan, "name" | "items">>) =>
+  updatePlansInBase((v) => v.plans.map((p) => (p.id === planId ? { ...p, ...change } : p)));
 
 /** After a rename on the server. */
 export const setPlanNameInBase = (planId: string, name: string) => updatePlanInBase(planId, { name });
 
 /** After an edit of the plan's items on the server. */
 export const setPlanItemsInBase = (planId: string, items: MealPlanItem[]) => updatePlanInBase(planId, { items });
+
+/** After a new plan was added on the server — at the end of its variant, as the server orders it. */
+export const addPlanToBase = (variantId: string, plan: MealPlan) =>
+  updatePlansInBase((v) => (v.id === variantId ? [...v.plans, plan] : v.plans));
+
+/** After a plan was deleted on the server. */
+export const removePlanFromBase = (planId: string) => updatePlansInBase((v) => v.plans.filter((p) => p.id !== planId));
 
 /** Where the user's saved data uses items of the base — for an import that replaces data (GET /api/diet-base/usage). */
 export type DietUsage = {

@@ -1,7 +1,9 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { number } from "../meals/MealDetails";
 import {
+  copyName,
+  deletePlan,
   getMealPlanVariants,
   planTotals,
   PLAN_NAME_MAX,
@@ -10,6 +12,7 @@ import {
   renamePlan,
   TARGET_TOLERANCE,
   type MealPlan,
+  type MealPlanItem,
 } from "./meal-plans";
 import { PlanCardSummary, PlanItems } from "./PlanItems";
 import { PlanEditor } from "./PlanEditor";
@@ -25,6 +28,9 @@ import "./MealPlansScreen.css";
 /** Saving a new name; on error the form stays open so the user can retry. */
 type Saving = { status: "idle" } | { status: "saving" } | { status: "error"; message: string };
 
+/** Start of a new plan: empty or a copy; `key` starts the editor anew on each "Nowy jadłospis" / "Kopiuj". */
+type NewDraft = { key: number; name: string; items: readonly MealPlanItem[] };
+
 export function MealPlansScreen() {
   const variants = getMealPlanVariants();
   const [variantId, setVariantId] = useState(rememberedVariantId() ?? variants[0]?.id ?? "");
@@ -32,6 +38,10 @@ export function MealPlansScreen() {
   const [renaming, setRenaming] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState<Saving>({ status: "idle" });
+  const [newDraft, setNewDraft] = useState<NewDraft | null>(null);
+  const draftCount = useRef(0);
+  /** Deleting the opened plan; on error the details stay open with the message. */
+  const [deleting, setDeleting] = useState<Saving>({ status: "idle" });
 
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
   const totals = useMemo(
@@ -52,11 +62,32 @@ export function MealPlansScreen() {
 
   const openPlan = variant.plans.find((plan) => plan.id === openId) ?? null;
 
+  /** Opens a plan (or none); closes the rename form, the editor and a new plan's draft without saving. */
   function open(planId: string | null) {
     setOpenId(planId);
     setRenaming(false);
     setEditing(false);
     setSaving({ status: "idle" });
+    setDeleting({ status: "idle" });
+    setNewDraft(null);
+  }
+
+  /** "Nowy jadłospis" (empty) or "Kopiuj" (the plan's items): closes the opened plan and opens a draft. */
+  function startNew(name: string, items: readonly MealPlanItem[]) {
+    open(null);
+    draftCount.current += 1;
+    setNewDraft({ key: draftCount.current, name, items });
+  }
+
+  async function removePlan(plan: MealPlan) {
+    if (!window.confirm(`Usunąć jadłospis „${plan.name}”? Nie da się tego cofnąć w aplikacji.`)) return;
+    setDeleting({ status: "saving" });
+    try {
+      await deletePlan(plan.id);
+      open(null);
+    } catch (error) {
+      setDeleting({ status: "error", message: (error as Error).message });
+    }
   }
 
   async function saveName(plan: MealPlan, name: string) {
@@ -70,9 +101,25 @@ export function MealPlansScreen() {
     }
   }
 
+  const busyDeleting = deleting.status === "saving";
+
+  /** Draft of a new plan in the selected variant; after a save the new plan opens. */
+  const newEditor = (draft: NewDraft) => (
+    <PlanEditor
+      key={draft.key}
+      mode="new"
+      variantId={variant.id}
+      name={draft.name}
+      items={draft.items}
+      targetKcal={variant.targetKcal}
+      onClose={() => setNewDraft(null)}
+      onCreated={(plan) => open(plan.id)}
+    />
+  );
+
   const details = (plan: MealPlan) =>
     editing ? (
-      <PlanEditor key={plan.id} plan={plan} targetKcal={variant.targetKcal} onClose={() => setEditing(false)} />
+      <PlanEditor key={plan.id} mode="edit" plan={plan} targetKcal={variant.targetKcal} onClose={() => setEditing(false)} />
     ) : (
       <>
         {renaming ? (
@@ -87,13 +134,29 @@ export function MealPlansScreen() {
           />
         ) : (
           <div className="plans-actions">
-            <button type="button" className="plans-button" onClick={() => setRenaming(true)}>
+            <button type="button" className="plans-button" disabled={busyDeleting} onClick={() => setRenaming(true)}>
               Zmień nazwę
             </button>
-            <button type="button" className="plans-button" onClick={() => setEditing(true)}>
+            <button type="button" className="plans-button" disabled={busyDeleting} onClick={() => setEditing(true)}>
               Edytuj
             </button>
+            <button
+              type="button"
+              className="plans-button"
+              disabled={busyDeleting}
+              onClick={() => startNew(copyName(plan.name), plan.items)}
+            >
+              Kopiuj
+            </button>
+            <button type="button" className="plans-button" disabled={busyDeleting} onClick={() => void removePlan(plan)}>
+              {busyDeleting ? "Usuwanie…" : "Usuń jadłospis"}
+            </button>
           </div>
+        )}
+        {deleting.status === "error" && (
+          <p className="plans-status is-error" role="alert">
+            Nie udało się usunąć. {deleting.message}
+          </p>
         )}
         <PlanItems key={plan.id} items={plan.items} />
       </>
@@ -102,6 +165,9 @@ export function MealPlansScreen() {
   return (
     <div className="meal-plans page-wide">
       <PlansHeader count={variant.plans.length}>
+        <button type="button" className="plans-button plans-new-button" onClick={() => startNew("", [])}>
+          Nowy jadłospis
+        </button>
         <ExportButton
           onExport={() =>
             downloadFile(`jadlospisy-${slugify(variant.name)}-${toIsoDate(new Date())}.csv`, exportMealPlanVariant(variant))
@@ -135,8 +201,19 @@ export function MealPlansScreen() {
         Cel: {number.format(variant.targetKcal)} kcal · wyróżnione: poza ±{TARGET_TOLERANCE * 100}%
       </p>
 
+      {variant.plans.length === 0 && !newDraft && <p className="meals-empty">Brak jadłospisów w tym wariancie.</p>}
+
       <div className="meals-layout">
         <ul className="meals-list">
+          {/* phone: a new plan's draft above the plan cards */}
+          {newDraft && (
+            <li className="meals-item is-open plans-new-item">
+              <div className="meals-details meals-details-inline">
+                <h2 className="meals-section-title plans-new-title">Nowy jadłospis</h2>
+                {newEditor(newDraft)}
+              </div>
+            </li>
+          )}
           {variant.plans.map((plan) => {
             const isOpen = openId === plan.id;
             return (
@@ -159,7 +236,12 @@ export function MealPlansScreen() {
 
         {/* PC: details of the selected plan next to the list */}
         <aside className="meals-panel">
-          {openPlan ? (
+          {newDraft ? (
+            <div className="meals-details">
+              <h2 className="meals-panel-title">Nowy jadłospis</h2>
+              {newEditor(newDraft)}
+            </div>
+          ) : openPlan ? (
             <div className="meals-details">
               <h2 className="meals-panel-title">{openPlan.name}</h2>
               {details(openPlan)}

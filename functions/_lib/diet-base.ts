@@ -187,7 +187,7 @@ function parsePlanItem(v: unknown, counts: Record<string, number>): PlanItem | s
   return 'kind must be "meal" or "product".';
 }
 
-/** Items of one plan (import and PUT /api/meal-plans/:id/items): 1–20 entries, meal types within their limits. */
+/** Items of one plan (import, edit and new plan): 1–20 entries, meal types within their limits. */
 export function parsePlanItems(v: unknown): PlanItem[] | string {
   if (!Array.isArray(v) || v.length === 0 || v.length > 20) return "plan items must be 1–20 entries.";
   const counts: Record<string, number> = {};
@@ -226,7 +226,7 @@ export function parseMealPlans(body: unknown): { variants: Variant[]; plans: Mea
   return { variants, plans };
 }
 
-/** The trimmed name from the body of PUT /api/meal-plans/:id/name, or an error message. */
+/** The trimmed name from a body with { name } (rename and new plan), or an error message. */
 export function parsePlanName(body: unknown): string | { error: string } {
   if (!isRecord(body) || typeof body.name !== "string") return { error: "Body must be { name }." };
   const name = body.name.trim();

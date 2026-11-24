@@ -1,6 +1,6 @@
 import { request } from "../../../shared/api";
 import type { ImportResult } from "../../../shared/ui/ImportButton";
-import { dietBase, setPlanItemsInBase, setPlanNameInBase } from "../diet-base";
+import { addPlanToBase, dietBase, removePlanFromBase, setPlanItemsInBase, setPlanNameInBase } from "../diet-base";
 import {
   findMeal,
   mealIngredients,
@@ -122,6 +122,33 @@ export async function savePlanItems(planId: string, items: readonly MealPlanItem
   });
   const saved = (await response.json()) as { items: MealPlanItem[] };
   setPlanItemsInBase(planId, saved.items);
+}
+
+// ---- new and delete ----
+
+/** Name of a copy: the original + " (kopia)", cut so it fits PLAN_NAME_MAX. */
+export function copyName(name: string): string {
+  const suffix = " (kopia)";
+  return name.slice(0, PLAN_NAME_MAX - suffix.length).trimEnd() + suffix;
+}
+
+/** Adds a new plan to the variant (POST /api/meal-plans) and puts it into the loaded base; returns the new plan. */
+export async function createPlan(variantId: string, name: string, items: readonly MealPlanItem[]): Promise<MealPlan> {
+  const response = await request("/api/meal-plans", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variantId, name, items }),
+  });
+  const saved = (await response.json()) as MealPlan & { variantId: string };
+  const plan: MealPlan = { id: saved.id, name: saved.name, items: saved.items };
+  addPlanToBase(saved.variantId, plan);
+  return plan;
+}
+
+/** Deletes the plan (DELETE /api/meal-plans/:id) and removes it from the loaded base. */
+export async function deletePlan(planId: string): Promise<void> {
+  await request(`/api/meal-plans/${encodeURIComponent(planId)}`, { method: "DELETE" });
+  removePlanFromBase(planId);
 }
 
 // ---- items ----

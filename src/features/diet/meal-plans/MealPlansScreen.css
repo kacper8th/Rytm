@@ -6,6 +6,28 @@
   color: var(--color-text-muted);
 }
 
+/* "Nowy jadłospis" in the header, in line with the export and import buttons */
+.plans-new-button {
+  margin-top: var(--space-2);
+  margin-right: var(--space-2);
+}
+
+/* phone: a new plan's draft above the plan cards; on PC it is in the panel */
+.plans-new-title {
+  padding-top: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .plans-new-item {
+    display: none;
+  }
+}
+
+/* name of a new plan in the editor, above the day totals */
+.plans-editor > .plans-name-field {
+  margin-bottom: var(--space-3);
+}
+
 /* plan name: rename button and form above the items of the day */
 .plans-actions {
   display: flex;
