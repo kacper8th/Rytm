@@ -3,7 +3,7 @@
  * The server checks only the shape of a day; whether meal / product ids exist is checked on display.
  */
 
-import { GAIN_MACROS, MEAL_TYPE_MAX } from "./diet-rules";
+import { checkMealType, GAIN_MACROS } from "./diet-rules";
 import { isId, isRecord } from "./validation";
 
 export type WeekPlanItem =
@@ -70,9 +70,9 @@ export function parseDayBody(body: unknown): { items: WeekPlanItem[]; source: We
   for (const [i, item] of items.entries()) {
     if (!isRecord(item)) return `Item ${i}: must be an object.`;
     const { mealType, kind } = item;
-    if (typeof mealType !== "string" || !(mealType in MEAL_TYPE_MAX)) return `Item ${i}: unknown mealType.`;
-    counts[mealType] = (counts[mealType] ?? 0) + 1;
-    if (counts[mealType] > MEAL_TYPE_MAX[mealType]) return `Item ${i}: too many "${mealType}".`;
+    if (typeof mealType !== "string") return `Item ${i}: unknown mealType.`;
+    const typeError = checkMealType(mealType, kind, counts);
+    if (typeError) return `Item ${i}: ${typeError}`;
 
     if (kind === "meal") {
       if (!isId(item.mealId)) return `Item ${i}: missing mealId.`;

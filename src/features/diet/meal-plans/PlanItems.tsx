@@ -91,7 +91,8 @@ export function PlanItems({ items }: { items: readonly MealPlanItem[] }) {
   );
 }
 
-function ItemSummary({ item }: { item: MealPlanItem }) {
+/** Content of one item row (goes inside a .plans-item-summary): meal type, name, kcal, macros. */
+export function ItemSummary({ item }: { item: MealPlanItem }) {
   const found = item.kind === "meal" ? findPlanMeal(item) : findPlanProduct(item);
   const type = <span className="plans-item-type">{mealTypeLabel(item.mealType)}</span>;
 

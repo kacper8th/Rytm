@@ -1,7 +1,14 @@
 import { request } from "../../../shared/api";
 import type { ImportResult } from "../../../shared/ui/ImportButton";
-import { dietBase, setPlanNameInBase } from "../diet-base";
-import { findMeal, mealIngredients, mealTotals, type GainSteps, type Meal, type MealIngredient } from "../meals/meals";
+import { dietBase, setPlanItemsInBase, setPlanNameInBase } from "../diet-base";
+import {
+  findMeal,
+  mealIngredients,
+  mealTotals,
+  type GainSteps,
+  type Meal,
+  type MealIngredient,
+} from "../meals/meals";
 import { findProduct, type NutrientKey, type Product } from "../products/products";
 
 /**
@@ -9,16 +16,41 @@ import { findProduct, type NutrientKey, type Product } from "../products/product
  * Items refer to meals and products by id. See documentation: Modules/Diet/Meal plans.
  */
 
-/** Meal types in display order, with the max count per plan. Must match MEAL_TYPE_MAX in functions/_lib/diet-rules.ts. */
+type MealTypeRule = {
+  key: string;
+  label: string;
+  /** Max items of this type per plan; null = no limit (up to PLAN_ITEMS_MAX in all). */
+  max: number | null;
+  /** true = an item may be a product; otherwise only meals. */
+  products: boolean;
+};
+
+/** Meal types in display order. Must match MEAL_TYPE_RULES in functions/_lib/diet-rules.ts. */
 export const MEAL_TYPES = [
-  { key: "śniadanie", label: "Śniadanie", max: 1 },
-  { key: "obiad", label: "Obiad", max: 1 },
-  { key: "podwieczorek", label: "Podwieczorek", max: 1 },
-  { key: "przekąska", label: "Przekąska", max: 2 },
-  { key: "kolacja", label: "Kolacja", max: 1 },
-] as const;
+  { key: "śniadanie", label: "Śniadanie", max: 1, products: false },
+  { key: "drugie śniadanie", label: "Drugie śniadanie", max: 1, products: false },
+  { key: "obiad", label: "Obiad", max: 1, products: false },
+  { key: "podwieczorek", label: "Podwieczorek", max: 1, products: false },
+  { key: "przekąska", label: "Przekąska", max: 1, products: false },
+  { key: "kolacja", label: "Kolacja", max: 1, products: false },
+  { key: "dodatkowy posiłek", label: "Dodatkowy posiłek", max: null, products: true },
+] as const satisfies readonly MealTypeRule[];
 
 export type MealType = (typeof MEAL_TYPES)[number]["key"];
+
+/** Max items of one plan / day. Must match the check of plan items in functions/_lib/diet-base.ts. */
+export const PLAN_ITEMS_MAX = 20;
+
+export function mealTypeRule(type: MealType): MealTypeRule {
+  return MEAL_TYPES.find((t) => t.key === type)!;
+}
+
+/** true when one more item of this type and kind fits the plan's items (type limit, products, PLAN_ITEMS_MAX). */
+export function canAddItem(items: readonly MealPlanItem[], type: MealType, kind: MealPlanItem["kind"]): boolean {
+  const rule = mealTypeRule(type);
+  if (items.length >= PLAN_ITEMS_MAX || (kind === "product" && !rule.products)) return false;
+  return rule.max === null || items.filter((i) => i.mealType === type).length < rule.max;
+}
 
 /** A day further than this from the variant's target kcal is highlighted (0.03 = ±3%). */
 export const TARGET_TOLERANCE = 0.03;
@@ -76,6 +108,22 @@ export async function renamePlan(planId: string, name: string): Promise<void> {
   setPlanNameInBase(planId, saved.name);
 }
 
+// ---- edit ----
+
+/** Max grams of a product item. Must match isGrams in functions/_lib/diet-base.ts. */
+export const ITEM_GRAMS_MAX = 5000;
+
+/** Saves all items of the plan (edit in the app) and puts them into the loaded base — PUT /api/meal-plans/:id/items. */
+export async function savePlanItems(planId: string, items: readonly MealPlanItem[]): Promise<void> {
+  const response = await request(`/api/meal-plans/${encodeURIComponent(planId)}/items`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+  const saved = (await response.json()) as { items: MealPlanItem[] };
+  setPlanItemsInBase(planId, saved.items);
+}
+
 // ---- items ----
 
 /** The meal of an item, or undefined when its id is no longer in Meals (possible in saved week plans). */
@@ -117,7 +165,7 @@ export function planItems(plan: MealPlan): MealPlanItem[] {
 }
 
 export function mealTypeLabel(type: MealType): string {
-  return MEAL_TYPES.find((t) => t.key === type)!.label;
+  return mealTypeRule(type).label;
 }
 
 /** Ingredients of one item: a meal after the plan's gain steps, or the product itself. */

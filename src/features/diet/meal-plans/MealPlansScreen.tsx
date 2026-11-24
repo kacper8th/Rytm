@@ -12,6 +12,7 @@ import {
   type MealPlan,
 } from "./meal-plans";
 import { PlanCardSummary, PlanItems } from "./PlanItems";
+import { PlanEditor } from "./PlanEditor";
 import { exportMealPlanVariant } from "./meal-plans-export";
 import { downloadFile } from "../../../shared/csv";
 import { toIsoDate } from "../../../shared/dates";
@@ -29,6 +30,7 @@ export function MealPlansScreen() {
   const [variantId, setVariantId] = useState(rememberedVariantId() ?? variants[0]?.id ?? "");
   const [openId, setOpenId] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState<Saving>({ status: "idle" });
 
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
@@ -53,6 +55,7 @@ export function MealPlansScreen() {
   function open(planId: string | null) {
     setOpenId(planId);
     setRenaming(false);
+    setEditing(false);
     setSaving({ status: "idle" });
   }
 
@@ -67,28 +70,34 @@ export function MealPlansScreen() {
     }
   }
 
-  const details = (plan: MealPlan) => (
-    <>
-      {renaming ? (
-        <NameForm
-          initial={plan.name}
-          saving={saving}
-          onSave={(name) => void saveName(plan, name)}
-          onCancel={() => {
-            setRenaming(false);
-            setSaving({ status: "idle" });
-          }}
-        />
-      ) : (
-        <div className="plans-actions">
-          <button type="button" className="plans-button" onClick={() => setRenaming(true)}>
-            Zmień nazwę
-          </button>
-        </div>
-      )}
-      <PlanItems key={plan.id} items={plan.items} />
-    </>
-  );
+  const details = (plan: MealPlan) =>
+    editing ? (
+      <PlanEditor key={plan.id} plan={plan} targetKcal={variant.targetKcal} onClose={() => setEditing(false)} />
+    ) : (
+      <>
+        {renaming ? (
+          <NameForm
+            initial={plan.name}
+            saving={saving}
+            onSave={(name) => void saveName(plan, name)}
+            onCancel={() => {
+              setRenaming(false);
+              setSaving({ status: "idle" });
+            }}
+          />
+        ) : (
+          <div className="plans-actions">
+            <button type="button" className="plans-button" onClick={() => setRenaming(true)}>
+              Zmień nazwę
+            </button>
+            <button type="button" className="plans-button" onClick={() => setEditing(true)}>
+              Edytuj
+            </button>
+          </div>
+        )}
+        <PlanItems key={plan.id} items={plan.items} />
+      </>
+    );
 
   return (
     <div className="meal-plans page-wide">

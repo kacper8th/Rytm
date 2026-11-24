@@ -1,5 +1,5 @@
 import { request } from "../../shared/api";
-import type { MealPlanVariant } from "./meal-plans/meal-plans";
+import type { MealPlan, MealPlanItem, MealPlanVariant } from "./meal-plans/meal-plans";
 import type { Meal } from "./meals/meals";
 import type { Product } from "./products/products";
 
@@ -63,20 +63,26 @@ export function dietBase(): Indexed {
   return base;
 }
 
-/** Puts one changed meal plan name into the loaded base (after a rename on the server). */
-export function setPlanNameInBase(planId: string, name: string) {
+/** Puts changed fields of one meal plan into the loaded base (after a save on the server). */
+function updatePlanInBase(planId: string, change: Partial<Pick<MealPlan, "name" | "items">>) {
   const current = dietBase();
   setBase(
     {
       ...current,
       variants: current.variants.map((v) => ({
         ...v,
-        plans: v.plans.map((p) => (p.id === planId ? { ...p, name } : p)),
+        plans: v.plans.map((p) => (p.id === planId ? { ...p, ...change } : p)),
       })),
     },
     false,
   );
 }
+
+/** After a rename on the server. */
+export const setPlanNameInBase = (planId: string, name: string) => updatePlanInBase(planId, { name });
+
+/** After an edit of the plan's items on the server. */
+export const setPlanItemsInBase = (planId: string, items: MealPlanItem[]) => updatePlanInBase(planId, { items });
 
 /** Where the user's saved data uses items of the base — for an import that replaces data (GET /api/diet-base/usage). */
 export type DietUsage = {

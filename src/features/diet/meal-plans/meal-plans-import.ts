@@ -17,6 +17,8 @@ import {
   getMealPlanVariants,
   itemTotals,
   MEAL_TYPES,
+  mealTypeRule,
+  PLAN_ITEMS_MAX,
   PLAN_NAME_MAX,
   rememberVariant,
   saveMealPlans,
@@ -146,6 +148,10 @@ export async function checkMealPlansFile(text: string): Promise<ImportCheck> {
         log.error(row, "produkt nie może mieć kroków doważania.");
         return;
       }
+      if (!mealTypeRule(mealType as MealType).products) {
+        log.error(row, `produkt nie może być typu „${mealType}” - produkty tylko jako „dodatkowy posiłek”.`);
+        return;
+      }
       item = { mealType: mealType as MealType, kind: "product", productId: product.id, grams };
     } else {
       log.error(row, `nieznany Typ pozycji „${kind}”.`);
@@ -174,7 +180,10 @@ export async function checkMealPlansFile(text: string): Promise<ImportCheck> {
   for (const plan of plans.values()) {
     for (const { key, max } of MEAL_TYPES) {
       const count = plan.items.filter((i) => i.mealType === key).length;
-      if (count > max) log.error(null, `Jadłospis „${plan.name}” ma ${count}× ${key}, najwyżej ${max}.`);
+      if (max !== null && count > max) log.error(null, `Jadłospis „${plan.name}” ma ${count}× ${key}, najwyżej ${max}.`);
+    }
+    if (plan.items.length > PLAN_ITEMS_MAX) {
+      log.error(null, `Jadłospis „${plan.name}” ma ${plan.items.length} pozycji, najwyżej ${PLAN_ITEMS_MAX}.`);
     }
   }
 

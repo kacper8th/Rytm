@@ -152,3 +152,103 @@
 .plans-item-details {
   padding: 0 var(--space-3) var(--space-3);
 }
+
+/* edit mode (PlanEditor.tsx): draft totals, swap buttons, grams, pickers */
+.plans-editor > .plans-actions {
+  margin-bottom: var(--space-3);
+}
+
+.plans-editor-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-md);
+}
+
+.plans-editor-add {
+  margin-top: var(--space-3);
+}
+
+/* change row: up = green, down = red (direction only, not a judgement) */
+.plans-change .is-up,
+.plans-change .is-down {
+  font-weight: 700;
+}
+
+.plans-change .is-up {
+  color: var(--color-success);
+}
+
+.plans-change .is-down {
+  color: var(--color-danger);
+}
+
+.plans-item-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+.plans-grams {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.plans-grams .plans-input {
+  width: 6em;
+  min-height: 36px;
+}
+
+.plans-input.is-invalid {
+  border-color: var(--color-accent);
+}
+
+.plans-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.plans-picker-header .meals-section-title {
+  margin: 0;
+}
+
+.plans-picker-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.plans-filter {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.plans-filter.is-active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.plans-picker-search {
+  width: 100%;
+  margin-bottom: var(--space-2);
+}
+
+.plans-picker .plans-item-details > .plans-actions {
+  margin-bottom: var(--space-3);
+}

@@ -3,7 +3,7 @@
  * See documentation: Modules/Diet/Decision 005 - Diet data in the database → Import.
  * The app does the full check of a CSV file; the server checks the shape and that every reference exists.
  */
-import { GAIN_MACROS, MEAL_TYPE_MAX } from "./diet-rules";
+import { checkMealType, GAIN_MACROS } from "./diet-rules";
 import { isInt, isRecord } from "./validation";
 
 // ---- shared with the app — must match the app code named next to each constant ----
@@ -168,9 +168,9 @@ function parseMeal(v: unknown): Meal | string {
 function parsePlanItem(v: unknown, counts: Record<string, number>): PlanItem | string {
   if (!isRecord(v)) return "plan item must be an object.";
   const { mealType, kind } = v;
-  if (typeof mealType !== "string" || !(mealType in MEAL_TYPE_MAX)) return "unknown mealType.";
-  counts[mealType] = (counts[mealType] ?? 0) + 1;
-  if (counts[mealType] > MEAL_TYPE_MAX[mealType]) return `too many "${mealType}".`;
+  if (typeof mealType !== "string") return "unknown mealType.";
+  const typeError = checkMealType(mealType, kind, counts);
+  if (typeError) return typeError;
   if (kind === "meal") {
     if (!isUuid(v.mealId) || !isRecord(v.steps)) return "meal item needs mealId (UUID) and steps.";
     const steps: Record<string, number> = {};
@@ -185,6 +185,19 @@ function parsePlanItem(v: unknown, counts: Record<string, number>): PlanItem | s
     return { mealType, kind, productId: v.productId, grams: v.grams };
   }
   return 'kind must be "meal" or "product".';
+}
+
+/** Items of one plan (import and PUT /api/meal-plans/:id/items): 1–20 entries, meal types within their limits. */
+export function parsePlanItems(v: unknown): PlanItem[] | string {
+  if (!Array.isArray(v) || v.length === 0 || v.length > 20) return "plan items must be 1–20 entries.";
+  const counts: Record<string, number> = {};
+  const items: PlanItem[] = [];
+  for (const raw of v) {
+    const item = parsePlanItem(raw, counts);
+    if (typeof item === "string") return item;
+    items.push(item);
+  }
+  return items;
 }
 
 export const parseProducts = (body: unknown) => parseList(body, parseProduct);
@@ -205,14 +218,8 @@ export function parseMealPlans(body: unknown): { variants: Variant[]; plans: Mea
     if (typeof v.name !== "string" || v.name.trim().length === 0 || v.name.length > PLAN_NAME_MAX) {
       return `plan name must be 1–${PLAN_NAME_MAX} characters.`;
     }
-    if (!Array.isArray(v.items) || v.items.length === 0 || v.items.length > 20) return "plan items must be 1–20 entries.";
-    const counts: Record<string, number> = {};
-    const items: PlanItem[] = [];
-    for (const raw of v.items) {
-      const item = parsePlanItem(raw, counts);
-      if (typeof item === "string") return item;
-      items.push(item);
-    }
+    const items = parsePlanItems(v.items);
+    if (typeof items === "string") return items;
     return { id: v.id, variantId: v.variantId, name: v.name.trim(), items };
   });
   if (typeof plans === "string") return `Plans — ${plans}`;
